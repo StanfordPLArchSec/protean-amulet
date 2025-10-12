@@ -13,6 +13,7 @@ from config import CONF
 from typing import NoReturn, Optional
 import sys
 import shutil
+import time
 
 MASK_64BIT = pow(2, 64)
 
@@ -223,6 +224,7 @@ class Logger:
         elapsed_str = f'{elapsed_hrs}hrs-{elapsed_mins}mins-{elapsed_secs}secs'
         print(f'\nDuration Elapsed: {elapsed_str}')
         print(datetime.today().strftime('Finished at %H:%M:%S'))
+        print(f"CPU time: {time.process_time()}")
         if violation:
             print("Violation found - Check results")
         elif STAT.violations:

@@ -191,6 +191,10 @@ class ConfCls:
     STT_UnsafeBaseline = False
     STT_FuturisticSpec = False
 
+    protean = None
+    protean_pred_mode = None
+    protean_pred_size = None
+
     # DOLMA
     # - 0: Baseline (no protection)
     # - 1: DOLMA-Default (M+R)

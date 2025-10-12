@@ -15,6 +15,7 @@ import random
 import time
 from pathlib import Path
 import toml
+import sys
 
 from config import CONF, ConfigException
 from service import LOGGER, STAT, rmtree_if_exists
@@ -29,6 +30,18 @@ import os
 import xxhash
 import shutil
 from io import StringIO, BytesIO
+
+import subprocess, traceback
+
+_orig_run = subprocess.run
+
+def traced_run(*args, **kwargs):
+    print(f"[subprocess.run] args={args} kwargs={kwargs}")
+    traceback.print_stack(limit=6)
+    return _orig_run(*args, **kwargs)
+
+subprocess.run = traced_run
+
 
 def assemble_and_link(infile, tmpfile, outfile):
     """
@@ -251,6 +264,16 @@ class X86Gem5(Executor):
             else:  # Spectre mode
                 cmd.extend(["--threat_model=Spectre"])
 
+
+        if CONF.protean:
+            print("HERE")
+            cmd.append(f"--mieros={CONF.protean}")
+            cmd.append("--speculation-model=AtRet")
+            if CONF.protean_pred_mode:
+                cmd.append(f"--mieros-pred-mode={CONF.protean_pred_mode}")
+            if CONF.protean_pred_size:
+                cmd.append(f"--mieros-pred-size={CONF.protean_pred_size}")
+
         if CONF.DOLMA:
             cmd.extend(["--mem-type=SimpleMemory"])
             if (CONF.DOLMA_mode == CONF.DOLMA_modes.Baseline):
@@ -305,7 +328,7 @@ class X86Gem5(Executor):
         cmd.append(f"--rel-max-tick={self.MAX_TICKS}")
         cmd.append(f"--checkpoint-dir={CONF.gem5_checkpoint}")
         self.cmd = cmd
-        
+
     def get_cmd(self,tc_path: str, restore: bool, priming: bool =False):
         cmd = self.cmd.copy()
         if self.orchestration == "ipc":
@@ -478,6 +501,7 @@ class X86Gem5(Executor):
                         rp = [int(r) for r in tags['system']['ruby']['l1_cntrl0']['L1Dcache']['replacements'].split()]
                 else:
                     print("Missing entry '[system.cpu.dcache]' in tags")
+                    print(tags_file)
                     exit(1)
                 state = []
                 for tag in t_state:
@@ -500,7 +524,7 @@ class X86Gem5(Executor):
                 for entry in tlb:
                     if not entry.startswith('Entry'): continue
                     state.append(int(tlb[entry]['paddr']))
-                if not CONF.SpecLFB:
+                if not CONF.SpecLFB and not CONF.protean:
                     assert len(state) > 0, 'TLB is empty? Seems unlikely'
             elif src == "branch_pred_state":
                 branch_pred = tags['system']['cpu']['branchPred']
@@ -755,7 +779,8 @@ class X86Gem5(Executor):
                 if CONF.profile: STAT.gem5_time += time.time() - start
                 if ret.returncode != 0:
                     print("gem5 failed")
-                    print(ret)
+                    sys.stdout.buffer.write(ret.stdout)
+                    sys.stderr.buffer.write(ret.stderr)
                     exit(1)
                 gem5_output = ret.stdout.decode()
             if CONF.profile: parse_start = time.time()
@@ -781,16 +806,18 @@ class X86Gem5(Executor):
             if CONF.gem5_save_checkpoints:
                 cpts = sorted(
                     glob(
-                        '{loc}/cpt*'.format(
+                        '{loc}/cpt.[0-9]*'.format(
                             loc=CONF.gem5_checkpoint)),
                     key=os.path.getmtime, reverse=True)
                 # cpt_value = None
                 if len(cpts) != 0:
                     #for checkpoint based priming we save the checkpoint as is
+                    if len(cpts) != 1:
+                        print(cpts)
                     assert len(cpts) == 1
                     tick = cpts[0].split('.')[-1]
                     self.ticks.append(tick)
-                    shutil.copy_debug_file(f"{cpts[0]}/m5.cpt", "{}/{}/checkpoint_{}_{}".format(CONF.debug_dir, CONF.test_case, id_, input_))
+                    self.copy_debug_file(f"{cpts[0]}/m5.cpt", "{}/{}/checkpoint_{}_{}".format(CONF.debug_dir, CONF.test_case, id_, input_))
             if CONF.gem5_orchestration != "ipc":
                 tags = glob('{loc}/tags*'.format( loc=CONF.gem5_checkpoint))
                 assert len(tags) == 1
@@ -889,6 +916,7 @@ class X86Gem5(Executor):
 
             # 4. run gem5
             if CONF.profile: start = time.time()
+            print("Running gem5:", *cmd)
             ret = run(cmd, capture_output=True)
             if CONF.profile: STAT.gem5_time += time.time() - start
             if ret.returncode != 0:

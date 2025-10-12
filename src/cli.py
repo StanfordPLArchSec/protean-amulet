@@ -176,6 +176,14 @@ def main():
         required=False,
         help="Must first specify --InvisiSpec; Strengthens STT Speculation Scheme!"
     )
+
+    parser_fuzz.add_argument(
+        "--protean",
+        choices=["Track", "Delay", "None"],
+    )
+    parser_fuzz.add_argument("--protean-pred-mode")
+    parser_fuzz.add_argument("--protean-pred-size")
+        
     parser_fuzz.add_argument(
         "--DOLMA",
         action='store',
@@ -525,6 +533,14 @@ def main():
         CONF.set('CleanupSpec', args.CleanupSpec)
         if args.CleanupSpec_UnsafeBaseline:
             CONF.set('CleanupSpec_UnsafeBaseline', args.CleanupSpec_UnsafeBaseline)
+
+    if args.protean:
+        if args.protean:
+            CONF.set('protean', args.protean)
+        if args.protean_pred_mode:
+            CONF.set('protean_pred_mode', args.protean_pred_mode)
+        if args.protean_pred_size:
+            CONF.set('protean_pred_size', args.protean_pred_size)
         
     from pathlib import Path
     test_case = ''
