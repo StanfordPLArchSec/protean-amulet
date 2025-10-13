@@ -5,6 +5,8 @@ import abc
 import subprocess
 import re
 from generator import X86Generator
+import sys
+import random
 
 class X86LLVMGenerator(Generator):
     def __init__(self, instruction_set: InstructionSet):
@@ -17,26 +19,41 @@ class X86LLVMGenerator(Generator):
 
         stem_file = asm_file.removesuffix(".asm")
         ll_in_file = stem_file + ".in.ll"
-        bc_out_file = stem_file + ".out.bc"
+        ll_peel_file = stem_file + ".peel.ll"
         ll_out_file = stem_file + ".out.ll"
         llvm_dir = "../llvm/ptex-17/build/bin"
         llvm_plugin = "../passes/build/libSandboxPass.so"
+
+        # Generate the input.
         subprocess.run([
             f"{llvm_dir}/llvm-stress",
             "-o",
             ll_in_file,
+            f"--seed={random.randint(0, 2 ** 32 - 1)}",
         ], check=True)
+
+        # Unpeel/preprocessing.
+        # TODO: Can join.
         subprocess.run([
             f"{llvm_dir}/opt",
+            "-S",
+            "--passes=loop-unroll",
+            "--unroll-count=2",
+            ll_in_file,
+            "-o", ll_peel_file,
+        ], check=True)
+
+        # Sandbox the LL.
+        subprocess.run([
+            f"{llvm_dir}/opt",
+            "-S",
             f"--load-pass-plugin={llvm_plugin}",
             "--passes=SandboxPass",
-            ll_in_file,
-            "-o", bc_out_file,
+            ll_peel_file,
+            "-o", ll_out_file,
         ], check=True)
-        subprocess.run([
-            f"{llvm_dir}/llvm-dis",
-            bc_out_file,
-        ], check=True)
+
+        # Compile.
         subprocess.run([
             f"{llvm_dir}/llc",
             "--x86-ptex=ct",
@@ -80,7 +97,7 @@ class X86LLVMGenerator(Generator):
 
         # First, put the right values in rdi, rsi.
         for i, line in enumerate(asm_lines):
-            if line.startswith("autogen_SD0:"):
+            if re.search(r"^autogen_SD\d+:", line):
                 break
         assert i + 1 < len(asm_lines)
         print(asm_lines[i + 1])
