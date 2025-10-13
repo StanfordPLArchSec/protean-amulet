@@ -1,0 +1,6 @@
+pyyaml
+numpy
+iced_x86
+unicorn
+xxhash
+toml
