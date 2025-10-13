@@ -31,18 +31,6 @@ import xxhash
 import shutil
 from io import StringIO, BytesIO
 
-import subprocess, traceback
-
-_orig_run = subprocess.run
-
-def traced_run(*args, **kwargs):
-    print(f"[subprocess.run] args={args} kwargs={kwargs}")
-    traceback.print_stack(limit=6)
-    return _orig_run(*args, **kwargs)
-
-subprocess.run = traced_run
-
-
 def assemble_and_link(infile, tmpfile, outfile):
     """
     Assemble the test case into a binary

@@ -71,7 +71,7 @@ class RegisterSet(abc.ABC):
     registers: Dict[int, List[str]]
     simd_registers: Dict[int, List[str]]
 
-
+# TODO: Remove.
 class ConfigurableGenerator(Generator, abc.ABC):
     instruction_set: InstructionSet
     """
@@ -1267,11 +1267,14 @@ class X86RandomGenerator(X86Generator, RandomGenerator):
     def __init__(self, instruction_set: InstructionSet):
         super().__init__(instruction_set)
 
+from generator_llvm import X86LLVMGenerator
 
 def get_generator(instruction_set: InstructionSet) -> Generator:
     if CONF.instruction_set == 'x86-64':
         if CONF.generator == 'random':
             return X86RandomGenerator(instruction_set)
+        elif CONF.generator == 'llvm':
+            return X86LLVMGenerator(instruction_set)
 
     ConfigException("unknown value of `instruction_set` configuration option")
     exit(1)

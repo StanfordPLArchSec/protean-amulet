@@ -34,6 +34,10 @@ def main():
         required=False
     )
     parser_fuzz.add_argument(
+        "-g", "--generator",
+        choices=["random", "llvm"],
+    )
+    parser_fuzz.add_argument(
         "-n", "--num-test-cases",
         type=int,
         default=1,
@@ -504,6 +508,9 @@ def main():
         CONF.set('debug_dir', CONF.debug_dir + args.process_run)
         # print(f"In args.process_run - CONF.debug_dir: {CONF.debug_dir}")
 
+    if args.generator:
+        CONF.generator = args.generator
+        
     # InvisiSpec Config
     if args.InvisiSpec:
         CONF.set('InvisiSpec', args.InvisiSpec)
