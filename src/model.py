@@ -27,6 +27,7 @@ from config import CONF, ConfigException
 from service import LOGGER
 import xxhash
 import json
+import capstone
 
 FLAGS_CF = 0b000000000001
 FLAGS_PF = 0b000000000100
@@ -706,9 +707,7 @@ class CTTracer(PCTracer):
         self.add_mem_address_to_trace(address, model)
         super(CTTracer, self).observe_mem_access(access, address, size, value, model)
 
-
 class CTNonSpecStoreTracer(PCTracer):
-
     def observe_mem_access(self, access, address, size, value, model):
         # trace all non-spec mem accesses and speculative loads
         if not model.in_speculation or access == uni.UC_MEM_READ:
@@ -717,7 +716,6 @@ class CTNonSpecStoreTracer(PCTracer):
 
 
 class CTRTracer(CTTracer):
-
     def reset_trace(self, emulator):
         self.trace = [
             emulator.reg_read(UC_X86_REG_RAX),
@@ -730,6 +728,27 @@ class CTRTracer(CTTracer):
         ]
         self.execution_trace = []
 
+class CTXTracer(CTRTracer):
+    def __init__(self):
+        super().__init__()
+        self.emulator = None
+        self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+        self.cs.detail = True
+
+    def observe_instruction(self, address: int, size: int, model):
+        super(CTXTracer, self).observe_instruction(address, size, model)
+        code = self.emulator.mem_read(address, size)
+        insn, = self.cs.disasm(code, address)
+        for op in insn.operands:
+            if op.type == capstone.CS_OP_MEM and \
+               op.access & (capstone.CS_AC_READ | capstone.CS_AC_WRITE):
+                mem = op.value.mem
+                for reg in [mem.base, mem.index]:
+                    if reg:
+                        reg = self.cs.reg_name(reg)
+                        reg = eval(f"UC_X86_REG_{reg.upper()}")
+                        reg = self.emulator.reg_read(reg)
+                        self.add_pc_to_trace(reg, model)        
 
 class ArchTracer(CTRTracer):
 
@@ -754,11 +773,13 @@ class X86UnicornSeq(X86UnicornModel):
 
     @staticmethod
     def trace_instruction(emulator, address, size, model) -> None:
+        model.tracer.emulator = emulator
         model.taint_tracker.start_instruction(model.current_instruction)
         model.tracer.observe_instruction(address, size, model)
 
     @staticmethod
     def trace_mem_access(emulator, access, address: int, size, value, model):
+        model.tracer.emulator = emulator
         model.taint_tracker.track_memory_access(address, size, access == UC_MEM_WRITE)
         model.tracer.observe_mem_access(access, address, size, value, model)
 
@@ -1056,6 +1077,8 @@ def get_model(bases: Tuple[int, int]) -> Model:
             model.tracer = MemoryTracer()
         elif CONF.contract_observation_clause == 'ct':
             model.tracer = CTTracer()
+        elif CONF.contract_observation_clause == 'ctx':
+            model.tracer = CTXTracer()
         elif CONF.contract_observation_clause == 'ct-nonspecstore':
             model.tracer = CTNonSpecStoreTracer()
         elif CONF.contract_observation_clause == 'ctr':
