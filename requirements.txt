@@ -4,3 +4,5 @@ iced_x86
 unicorn
 xxhash
 toml
+keystone-engine
+capstone
