@@ -766,18 +766,24 @@ class CTXTracer(CTTracer):
 class ProtTracer(CTTracer):
     def __init__(self):
         super().__init__()
-        self.emulator = None
         self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
         self.cs.detail = True
 
-    def check_protected_pc(self, pc) -> bool:
-        code = self.emulator.mem_read(pc, 1)
+    def check_protected_pc(self, pc, model) -> bool:
+        code = model.emulator.mem_read(pc, 1)
         return code[0] == 0x36
 
-    def get_regval(self, cs_reg) -> int:
+    def cs_to_uc_regname(self, cs_reg):
+        if cs_reg == "rflags":
+            return "eflags"
+        else:
+            return cs_reg
+        
+
+    def get_regval(self, cs_reg, model) -> int:
         reg = self.cs.reg_name(cs_reg)
-        reg = eval(f"UC_X86_REG_{reg.upper()}")
-        reg = self.emulator.reg_read(reg)
+        reg = eval(f"UC_X86_REG_{self.cs_to_uc_regname(reg).upper()}")
+        reg = model.emulator.reg_read(reg)
         return reg
 
     def obseve_mem_access(self, access, address, size, value, model):
@@ -785,7 +791,7 @@ class ProtTracer(CTTracer):
         if access != uni.UC_MEM_READ:
             return
         pc = self.emulator.reg_read(UC_X86_REG_RIP)
-        if self.check_protected_pc(pc):
+        if self.check_protected_pc(pc, model):
             return
         # Expose memory data.
         val = int.from_bytes(model.emulator.mem_read(address, size), byteorder='little')
@@ -793,7 +799,7 @@ class ProtTracer(CTTracer):
 
     def observe_instruction(self, address: int, size: int, model):
         super().observe_instruction(address, size, model)
-        code = self.emulator.mem_read(address, size)
+        code = model.emulator.mem_read(address, size)
         insn, = self.cs.disasm(code, address)
 
         # Expose all address registers.
@@ -803,15 +809,15 @@ class ProtTracer(CTTracer):
                 mem = op.value.mem
                 for reg in [mem.base, mem.index]:
                     if reg:
-                        self.add_pc_to_trace(get_regval(reg), model)
+                        self.add_pc_to_trace(self.get_regval(reg, model), model)
 
         # Is the instruction unprotected?
-        if not self.check_protected(code):
+        if not self.check_protected_pc(address, model):
             return
 
         # Expose ouptut registers, since the instruction is unprotected.
-        for reg in insns.regs_write:
-            self.add_pc_to_trace(get_regval(reg), model)
+        for reg in insn.regs_write:
+            self.add_pc_to_trace(self.get_regval(reg, model), model)
         
                         
 class ArchTracer(CTRTracer):
@@ -1147,6 +1153,8 @@ def get_model(bases: Tuple[int, int]) -> Model:
             model.tracer = CTRTracer()
         elif CONF.contract_observation_clause == 'arch':
             model.tracer = ArchTracer()
+        elif CONF.contract_observation_clause == 'prot':
+            model.tracer = ProtTracer()
         else:
             ConfigException("unknown value of `contract_observation_clause` configuration option")
             exit(1)
