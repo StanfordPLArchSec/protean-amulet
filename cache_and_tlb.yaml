@@ -9,7 +9,7 @@ supported_categories:
   #- BASE-SETCC
   - BASE-LOGICAL
   
-contract_observation_clause: ct # ct/arch
+contract_observation_clause: ctx # ct/arch
 contract_execution_clause: #seq/cond/cond-bpas
   - seq
 
