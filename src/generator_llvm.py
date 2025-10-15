@@ -145,16 +145,21 @@ class X86LLVMGenerator(Generator):
 
         # mov %r14, %rdi
         # mov $mask, %rsi
-        mask = CONF.input_main_region_size - 1
+        mask = (CONF.input_main_region_size - 1) & ~0b111
+        # mov [rdi + 0x1000], rsp
+        # mov [rdi
         prologue = [
             "mov rdi, r14",
             f"mov rsi, {mask}",
             "mov rbx, 0",
+            "lea rsp, [rdi+rsi]",
             ".byte 0x36; mov rdx, rdx",
             ".byte 0x36; mov rcx, rcx",
-            ".byte 0x36; mov r8, r8",
-            ".byte 0x36; mov r9, r9",
+            # "mov r8, 0",
+            # "mov r9, 0",
         ]
+        for reg in ['r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15', 'rbp']:
+            prologue.append(f'mov {reg}, 0')
         code = bytes(self.ks.asm("; ".join(prologue))[0]) + code
         # code = bytes(self.ks.asm(f"mov rdi, r14; mov rsi, {mask}; mov rbx, 0")[0]) + code
 
