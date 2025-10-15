@@ -562,7 +562,9 @@ class X86Generator(ConfigurableGenerator, abc.ABC):
 
                 if not line[0] == ".":  # skip non-lables - we will parse them in the second pass
                     continue
-                parser_assert(line[-1] == ":", i, "Labels must start with '.', end with ':\\n'")
+                if re.match(r"\s*.byte.*", line):
+                    continue
+                # parser_assert(line[-1] == ":", i, "Labels must start with '.', end with ':\\n'")
 
                 # Function
                 if line.startswith(".function_"):
@@ -1202,6 +1204,15 @@ class X86PatchUndefinedResultPass(Pass):
             .add_op(ImmediateOperand(mask, mask_size))
         parent.insert_before(inst, apply_mask)
 
+class X86RandomProtectPass(Pass):
+    def run_on_test_case(self, test_case: TestCase) -> None:
+        for func in test_case.functions:
+            for bb in func:
+                for inst in bb:
+                    if random.getrandbits(2) == 0:
+                        bb.insert_before(inst, Instruction(f".byte 0x36"))
+
+                    
 
 class X86Printer(Printer):
     memory_prefixes = {8: "byte ptr", 16: "word ptr", 32: "dword ptr", 64: "qword ptr", 512: ""}
@@ -1268,6 +1279,7 @@ class X86RandomGenerator(X86Generator, RandomGenerator):
         super().__init__(instruction_set)
 
 from generator_llvm import X86LLVMGenerator
+from generator_const import X86ConstGenerator
 
 def get_generator(instruction_set: InstructionSet) -> Generator:
     if CONF.instruction_set == 'x86-64':
@@ -1275,6 +1287,8 @@ def get_generator(instruction_set: InstructionSet) -> Generator:
             return X86RandomGenerator(instruction_set)
         elif CONF.generator == 'llvm':
             return X86LLVMGenerator(instruction_set)
+        elif m := re.match(r"const:(.*)", CONF.generator):
+            return X86ConstGenerator(instruction_set, m.group(1))
 
     ConfigException("unknown value of `instruction_set` configuration option")
     exit(1)

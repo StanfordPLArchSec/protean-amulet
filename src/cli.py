@@ -35,7 +35,6 @@ def main():
     )
     parser_fuzz.add_argument(
         "-g", "--generator",
-        choices=["random", "llvm"],
     )
     parser_fuzz.add_argument(
         "-n", "--num-test-cases",

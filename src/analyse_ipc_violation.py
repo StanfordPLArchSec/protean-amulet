@@ -48,10 +48,6 @@ if (args.only_analyze):
     ast = args.only_run or revizor_arguments or args.use_yaml_debug_flags
     assert not ast, "We are not running the fuzzer!"
 
-expected_path = "/code/revizor-docker/src"
-assert os.getcwd() == expected_path, \
-    f"Current working directory is {os.getcwd()}, but expected {expected_path}"
-
 ORCHESTRATION_CODE = '<in orchestration code>'
 MID_INSTRUCTION = '<mid-instruction byte>'
 code_addr = 0x402000

@@ -117,6 +117,7 @@ class X86Gem5(Executor):
         self.sandbox_base = allocated_working_region + (self.WORKING_MEMORY_SIZE // 2)
         self.lower_overflow_base = self.sandbox_base
         self.main_region = self.lower_overflow_base + self.OVERFLOW_REGION_SIZE
+        print(f"main region: {self.main_region:x}")
         self.assist_region_base = self.main_region + self.MAIN_REGION_SIZE
         self.upper_overflow_base = self.assist_region_base + self.ASSIST_REGION_SIZE
         
