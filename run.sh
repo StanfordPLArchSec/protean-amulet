@@ -29,7 +29,8 @@ run_bench() {
 }
 
 run_bench_delay() {
-    results_dir=protean-delay
+    name=protean-delay
+    results_dir=$name
     mkdir -p $results_dir
     for ((i=0; i<100; ++i)); do
         $src/cli.py fuzz \
@@ -40,7 +41,24 @@ run_bench_delay() {
                     -i 140 -n 200 \
                     -c $YAML \
                     --result-dir=$results_dir \
-                    -p protean-delay-$i >&$results_dir/log-$i.txt &
+                    -p $name-$i >&$results_dir/log-$i.txt &
+    done
+}
+
+run_bench_track() {
+    name=protean-track
+    results_dir=$name
+    mkdir -p $results_dir
+    for ((i=0; i<100; ++i)); do
+        $src/cli.py fuzz \
+                    --gen-seed=$RANDOM$RANDOM \
+                    -s $script_dir/base.json \
+                    --generator=llvm \
+                    --ruby --protean=Track --protean-pred-mode=Predict --protean-pred-size=1024 \
+                    -i 140 -n 200 \
+                    -c $YAML \
+                    --result-dir=$results_dir \
+                    -p $name-$i >&$results_dir/log-$i.txt &
     done
 }
 
