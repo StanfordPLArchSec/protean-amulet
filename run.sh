@@ -6,8 +6,9 @@ script_dir=$(dirname ${BASH_SOURCE[0]})
 src=$script_dir/src
 
 YAML=$script_dir/cache_and_tlb.yaml
+YAML_PROT=$script_dir/cache_and_tlb_prot.yaml
 
-protean_args=(--protean=Delay --protean-pred-mode=Predict --protean-pred-size=1024) # --debug-flags=O3CPU)
+protean_args=(--protean=Track --protean-pred-mode=Predict --protean-pred-size=1024) # --debug-flags=O3CPU)
 generator=--generator=llvm
 # generator=--generator=const:tmp2.asm
 
@@ -18,7 +19,7 @@ fi
 run_debug() {
     i=0
     # --nonstop
-    $src/cli.py fuzz --gen-seed=$RANDOM$RANDOM --ipc-show-output --verbose -s $script_dir/base.json $generator --ruby ${protean_args[@]} -i 140 -n 200 -c $YAML -p protean-$i
+    $src/cli.py fuzz --gen-seed=$RANDOM$RANDOM --ipc-show-output --verbose -s $script_dir/base.json --generator=random --ruby ${protean_args[@]} -i 140 -n 200 -c $YAML_PROT -p protean-$i
 }
 
 run_bench() {
@@ -28,38 +29,115 @@ run_bench() {
     done
 }
 
-run_bench_delay() {
-    name=protean-delay
-    results_dir=$name
+# TODO: run_bench_archx
+
+run_bench_ctx() {
+    name=protean-ct$1
+    results_dir=$name/
     mkdir -p $results_dir
     for ((i=0; i<100; ++i)); do
         $src/cli.py fuzz \
                     --gen-seed=$RANDOM$RANDOM \
                     -s $script_dir/base.json \
                     --generator=llvm \
-                    --ruby --protean=Delay \
+                    --ruby --protean=$2 --protean-pred-mode=Predict --protean-pred-size=1024 \
                     -i 140 -n 200 \
-                    -c $YAML \
+                    -c cache_and_tlb_ct.yaml \
                     --result-dir=$results_dir \
                     -p $name-$i >&$results_dir/log-$i.txt &
     done
 }
 
-run_bench_track() {
-    name=protean-track
-    results_dir=$name
+run_bench_ctnone() {
+    run_bench_ctx none None
+}
+
+run_bench_ctdelay() {
+    run_bench_ctx delay Delay
+}
+
+run_bench_cttrack() {
+    run_bench_ctx track Track
+}
+
+run_bench_ctunmod() {
+    name=protean-ctunmod$1
+    results_dir=$name/
     mkdir -p $results_dir
-    for ((i=0; i<100; ++i)); do
+    for ((i=0; i<25; ++i)); do
         $src/cli.py fuzz \
                     --gen-seed=$RANDOM$RANDOM \
                     -s $script_dir/base.json \
-                    --generator=llvm \
-                    --ruby --protean=Track --protean-pred-mode=Predict --protean-pred-size=1024 \
+                    --generator=llvm-unmod \
+                    --ruby --protean=$2 --protean-pred-mode=Predict --protean-pred-size=1024 \
                     -i 140 -n 200 \
-                    -c $YAML \
+                    -c cache_and_tlb_ct.yaml \
                     --result-dir=$results_dir \
                     -p $name-$i >&$results_dir/log-$i.txt &
     done
+
+}
+
+run_bench_ctunmoddelay() {
+    run_bench_ctunmod delay Delay
+}
+
+run_bench_ctunmodtrack() {
+    run_bench_ctunmod track Track
+}
+
+run_bench_cts() {
+    name=protean-cts$1
+    results_dir=$name/
+    mkdir -p $results_dir
+    for ((i=0; i<25; ++i)); do
+        $src/cli.py fuzz \
+                    --gen-seed=$RANDOM$RANDOM \
+                    -s $script_dir/base.json \
+                    --generator=llvm-cts \
+                    --ruby --protean=$2 --protean-pred-mode=Predict --protean-pred-size=1024 \
+                    -i 140 -n 200 \
+                    -c cache_and_tlb_ct.yaml \
+                    --result-dir=$results_dir \
+                    -p $name-$i >&$results_dir/log-$i.txt &
+    done
+}
+
+run_bench_ctsdelay() {
+    run_bench_cts delay Delay
+}
+
+run_bench_ctstrack() {
+    run_bench_cts track Track
+}
+
+run_bench_protx() {
+    name=protean-prot$1
+    results_dir=$name/
+    mkdir -p $results_dir
+     for ((i=0; i<25; ++i)); do
+        $src/cli.py fuzz \
+                    --gen-seed=$RANDOM$RANDOM \
+                    -s $script_dir/base.json \
+                    --generator=random \
+                    --ruby --protean=$2 --protean-pred-mode=Predict --protean-pred-size=1024 \
+                    -i 140 -n 200 \
+                    -c cache_and_tlb_prot.yaml \
+                    --result-dir=$results_dir \
+                    -p $name-$i >&$results_dir/log-$i.txt &
+    done
+}
+
+run_bench_protnone() {
+    run_bench_protx none None
+}
+
+run_bench_protdelay() {
+    run_bench_protx delay Delay
+}
+
+run_bench_prottrack() {
+    run_bench_protx track Track
 }
 
 run_analyze() {
@@ -80,8 +158,14 @@ run_check() {
     if [[ "$2" != "" ]]; then
         asm="$2"
     fi
-    $src/cli.py fuzz -s $script_dir/base.json $generator --ruby ${protean_args[@]} -i 1 -n 1 -c $YAML --verbose -ic $1/inputpickle_reference.pkl -t $asm -p protean-check-0 | tee $tmp1
-    $src/cli.py fuzz -s $script_dir/base.json $generator --ruby ${protean_args[@]} -i 1 -n 1 -c $YAML --verbose -ic $1/inputpickle_primer.pkl -t $asm -p protean-check-1 | tee $tmp2
+    extra_args=""
+    # extra_args="--ipc-show-output"
+    conf=$1/configuration.yaml
+    rm -f ~/log.out
+    $src/cli.py fuzz -s $script_dir/base.json $extra_args --generator=llvm --ruby ${protean_args[@]} -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_reference.pkl -t $asm -p protean-check-0 | tee $tmp1
+    mv ~/log.out dbgout1.txt
+    $src/cli.py fuzz -s $script_dir/base.json $extra_args --generator=llvm --ruby ${protean_args[@]} -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_primer.pkl -t $asm -p protean-check-1 | tee $tmp2
+    mv ~/log.out dbgout2.txt
     num_ctraces=$(cat $tmp1 $tmp2 | grep ctrace | uniq | wc -l | cut -d' ' -f1)
     num_htraces=$(cat $tmp1 $tmp2 | grep htrace | uniq | wc -l | cut -d' ' -f1)
     if (( $num_ctraces != 1 )); then

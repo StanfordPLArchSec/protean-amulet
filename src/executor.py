@@ -115,9 +115,10 @@ class X86Gem5(Executor):
         allocated_working_region = int(0x502000)
         # Must init main_region comfortably above working region to catch any & all speculative underflows!
         self.sandbox_base = allocated_working_region + (self.WORKING_MEMORY_SIZE // 2)
+        print(f"executor: {self.sandbox_base=:x}")
         self.lower_overflow_base = self.sandbox_base
         self.main_region = self.lower_overflow_base + self.OVERFLOW_REGION_SIZE
-        print(f"main region: {self.main_region:x}")
+        print(f"executor: {self.main_region=:x}")
         self.assist_region_base = self.main_region + self.MAIN_REGION_SIZE
         self.upper_overflow_base = self.assist_region_base + self.ASSIST_REGION_SIZE
         
@@ -255,7 +256,6 @@ class X86Gem5(Executor):
 
 
         if CONF.protean:
-            print("HERE")
             cmd.append(f"--mieros={CONF.protean}")
             cmd.append("--speculation-model=AtRet")
             if CONF.protean_pred_mode:
@@ -335,9 +335,16 @@ class X86Gem5(Executor):
         if "dtlb" in self.gem5_attacker_mode["sources"] and "DumpTLBWithCaches" not in debug_flags:
             debug_flags.append("DumpTLBWithCaches")
 
+        # Add Exec debug flags for IPC mode
+        debug_file = "log.out"
+        if self.orchestration == "ipc":
+            debug_flags_str = os.getenv("GEM5_DEBUG_FLAGS", "")
+            if debug_flags_str != "":
+                debug_flags = debug_flags_str.split(",")
+
         if debug_flags:
             cmd[1] = f"--debug-flags={','.join(debug_flags)}"
-            cmd[2] = "--debug-file=log.out"
+            cmd[2] = "--debug-file=/home/nmosier/log.out"
         if not priming and CONF.gem5_save_checkpoints:
             cmd.append("--checkpoint-at-end")
         if CONF.debug:
@@ -376,7 +383,6 @@ class X86Gem5(Executor):
     def construct_program(self, code_segment: str = "",
                           init_registers: str = "", init_flags: str = "",
                           data_segment: str = "") -> str:
-        
         # LOGGER.dbg_fuzzer(f"construct_program - len(init_registers): {len(init_registers)}, len(data_segment):{len(data_segment)}, len(init_flags): {len(init_flags)}")
 
         def clean_up(code_segment: str) -> str:
@@ -410,7 +416,6 @@ class X86Gem5(Executor):
         return program
 
     def generate_test_data(self, input_: Input) -> Tuple[str, str, str, str]:
-
         def pad(n):
             if n <= (2**51 - 1):
                 return int(n + (2**53)), int((2**53-1)), 'ANDQ'
@@ -450,7 +455,7 @@ class X86Gem5(Executor):
             init_registers += f"  MOV {reg}, 0\n"
 
         # initialize R14
-        init_registers += f"  MOV R14, {self.main_region}\n"
+        init_registers += f"  MOV R14, {self.sandbox_base}\n"
 
         # Preamble; load this and zero it out to warm tlb!
         # All mem accesses are r14 + some offset s.t. r14 is main region base

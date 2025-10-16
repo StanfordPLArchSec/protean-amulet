@@ -147,8 +147,10 @@ class X86UnicornModel(Model):
         
         self.code_start = code_start
         self.sandbox_base = sandbox_base
+        print(f"model: {self.sandbox_base=:x}")
         self.lower_overflow_base = self.sandbox_base
         self.main_region = self.lower_overflow_base + self.OVERFLOW_REGION_SIZE
+        print(f"model: {self.main_region=:x}")
         self.assist_region_base = self.main_region + self.MAIN_REGION_SIZE
         self.upper_overflow_base = self.assist_region_base + self.ASSIST_REGION_SIZE
         self.stack_base = sandbox_base + self.MAIN_REGION_SIZE - 8
@@ -763,7 +765,7 @@ class CTXTracer(CTTracer):
                         self.add_pc_to_trace(reg, model)
 
 
-class ProtTracer(CTTracer):
+class ProtTracer(CTRTracer):
     def __init__(self):
         super().__init__()
         self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
@@ -786,11 +788,12 @@ class ProtTracer(CTTracer):
         reg = model.emulator.reg_read(reg)
         return reg
 
-    def obseve_mem_access(self, access, address, size, value, model):
+    def observe_mem_access(self, access, address, size, value, model):
         super().observe_mem_access(access, address, size, value, model)
         if access != uni.UC_MEM_READ:
             return
-        pc = self.emulator.reg_read(UC_X86_REG_RIP)
+        pc = model.emulator.reg_read(UC_X86_REG_RIP)
+        assert pc == self.last_pc
         if self.check_protected_pc(pc, model):
             return
         # Expose memory data.
@@ -801,6 +804,7 @@ class ProtTracer(CTTracer):
         super().observe_instruction(address, size, model)
         code = model.emulator.mem_read(address, size)
         insn, = self.cs.disasm(code, address)
+        self.last_pc = address
 
         # Expose all address registers.
         for op in insn.operands:

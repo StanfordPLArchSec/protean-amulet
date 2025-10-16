@@ -526,6 +526,8 @@ class X86Generator(ConfigurableGenerator, abc.ABC):
             X86PatchUndefinedFlagsPass(self.instruction_set, self),
             X86PatchUndefinedResultPass(),
         ]
+        if CONF.contract_observation_clause == 'prot':
+            self.passes.append(X86RandomProtectPass())
         self.printer = X86Printer()
         self.register_set = X86Registers()
 
@@ -621,7 +623,7 @@ class X86Generator(ConfigurableGenerator, abc.ABC):
                     terminators_started = False
                     continue
 
-                if line.startswith("."):
+                if line.startswith(".") and not line.startswith(".byte"):
                     current_bb = bb_names[line[:-1]]
                     terminators_started = False
                     continue
@@ -665,6 +667,9 @@ class X86Generator(ConfigurableGenerator, abc.ABC):
         return test_case
 
     def _parse_instruction(self, line: str, li: int, instruction_map: Dict) -> Instruction:
+        if re.match(r"\s*\.byte\s+0x36", line):
+            return Instruction(f".byte 0x36")
+
         # get name and possible specs
         words = line.split()
         name = ""
@@ -799,6 +804,8 @@ class X86Generator(ConfigurableGenerator, abc.ABC):
         for func in test_case.functions:
             for bb in func:
                 for inst in list(bb) + bb.terminators:
+                    if inst.name == '.byte 0x36':
+                        continue
                     address = address_list[counter]
                     address_map[address] = inst
                     counter += 1
@@ -1286,7 +1293,11 @@ def get_generator(instruction_set: InstructionSet) -> Generator:
         if CONF.generator == 'random':
             return X86RandomGenerator(instruction_set)
         elif CONF.generator == 'llvm':
-            return X86LLVMGenerator(instruction_set)
+            return X86LLVMGenerator(instruction_set, protcc='ct')
+        elif CONF.generator == 'llvm-unmod':
+            return X86LLVMGenerator(instruction_set, protcc='sbox')
+        elif CONF.generator == 'llvm-cts':
+            return X86LLVMGenerator(instruction_set, protcc='cts')
         elif m := re.match(r"const:(.*)", CONF.generator):
             return X86ConstGenerator(instruction_set, m.group(1))
 

@@ -15,14 +15,15 @@ import shutil
 
 max_code_size = 512
 llvm_dir = "../llvm/ptex-17/build/bin"
-ptex_mode = "ct"
 optimize = True
 
 class X86LLVMGenerator(Generator):
-    def __init__(self, instruction_set: InstructionSet):
+    def __init__(self, instruction_set: InstructionSet, protcc: str):
         super().__init__(instruction_set)
         if CONF.test_case_generator_seed:
             random.seed(CONF.test_case_generator_seed)
+
+        self.ptex_mode = protcc
 
         # assembler stuff
         self.ks = Ks(KS_ARCH_X86, KS_MODE_64)
@@ -208,7 +209,7 @@ class X86LLVMGenerator(Generator):
     def compile_llc(self, ll_file, obj_file) -> bool:
         llc_result = subprocess.run([
             f"{llvm_dir}/llc",
-            f"--x86-ptex={ptex_mode}",
+            f"--x86-ptex={self.ptex_mode}",
             ll_file,
             "-o", obj_file,
             "--filetype=obj",
