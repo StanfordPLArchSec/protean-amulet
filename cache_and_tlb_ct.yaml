@@ -54,7 +54,7 @@ gem5_trace_mode:  "data_cache"
 gem5_batch_size:  1
 gem5_restore:  0 # DEBUG: Need priming if using checkpoints
 
-gem5_ipc_parallelism: 1
+gem5_ipc_parallelism: 4
 
 gem5_attacker_mode:
    sources : ["data_cache", "dtlb"]

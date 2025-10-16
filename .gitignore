@@ -41,3 +41,9 @@ gem5-docker/
 # Scratchpad
 dbg
 dbg/*
+/*.asm
+*~
+\#*\#
+log-*.txt
+debug-*/
+/protean-*/
