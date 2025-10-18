@@ -8,7 +8,7 @@ src=$script_dir/src
 YAML=$script_dir/cache_and_tlb.yaml
 YAML_PROT=$script_dir/cache_and_tlb_prot.yaml
 
-protean_args=(--protean=Track --protean-pred-mode=Predict --protean-pred-size=1024) # --debug-flags=O3CPU)
+protean_args=(--protean=None --protean-pred-mode=Predict --protean-pred-size=1024) # --debug-flags=O3CPU)
 generator=--generator=llvm
 # generator=--generator=const:tmp2.asm
 
@@ -30,6 +30,34 @@ run_bench() {
 }
 
 # TODO: run_bench_archx
+run_bench_archx() {
+    name=protean-arch$1
+    results_dir=$name/
+    mkdir -p $results_dir
+    for ((i=0; i<100; ++i)); do
+        $src/cli.py fuzz \
+                    --gen-seed=$RANDOM$RANDOM \
+                    -s $script_dir/base.json \
+                    --generator=random \
+                    --ruby --protean=$2 --protean-pred-mode=Predict --protean-pred-size=1024 \
+                    -i 140 -n 200 \
+                    -c cache_and_tlb_arch.yaml \
+                    --result-dir=$results_dir \
+                    -p $name-$i >&$results_dir/log-$i.txt &
+    done
+}
+
+run_bench_archnone() {
+    run_bench_archx none None
+}
+
+run_bench_archdelay() {
+    run_bench_archx delay Delay
+}
+
+run_bench_archtrack() {
+    run_bench_archx track Track
+}
 
 run_bench_ctx() {
     name=protean-ct$1
@@ -115,7 +143,7 @@ run_bench_protx() {
     name=protean-prot$1
     results_dir=$name/
     mkdir -p $results_dir
-     for ((i=0; i<25; ++i)); do
+     for ((i=0; i<100; ++i)); do
         $src/cli.py fuzz \
                     --gen-seed=$RANDOM$RANDOM \
                     -s $script_dir/base.json \

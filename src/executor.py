@@ -340,11 +340,13 @@ class X86Gem5(Executor):
         if self.orchestration == "ipc":
             debug_flags_str = os.getenv("GEM5_DEBUG_FLAGS", "")
             if debug_flags_str != "":
-                debug_flags = debug_flags_str.split(",")
+                debug_flags.extend(debug_flags_str.split(","))
 
         if debug_flags:
             cmd[1] = f"--debug-flags={','.join(debug_flags)}"
-            cmd[2] = "--debug-file=/home/nmosier/log.out"
+            cmd[2] = "--debug-file=log.out"
+            if debug_file := os.getenv("GEM5_DEBUG_FILE"):
+                cmd[2] = f"--debug-file={debug_file}"
         if not priming and CONF.gem5_save_checkpoints:
             cmd.append("--checkpoint-at-end")
         if CONF.debug:
