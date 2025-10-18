@@ -349,7 +349,7 @@ class X86Gem5(Executor):
                 cmd[2] = f"--debug-file={debug_file}"
         if not priming and CONF.gem5_save_checkpoints:
             cmd.append("--checkpoint-at-end")
-        if CONF.debug:
+        if CONF.debug or True:
             cmd.append("--dump-stats")
         if restore:
             cmd.extend(["--restore-with-cpu=DerivO3CPU", "-r 1"])

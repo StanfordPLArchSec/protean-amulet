@@ -103,6 +103,9 @@ def main():
     #     type=str
     # )
     parser_fuzz.add_argument(
+        "--cpu-type"
+    )
+    parser_fuzz.add_argument(
         "--gem5-restore",
         type=int
     )
@@ -509,6 +512,9 @@ def main():
 
     if args.generator:
         CONF.generator = args.generator
+
+    if args.cpu_type:
+        CONF.cpu_type = args.cpu_type
         
     # InvisiSpec Config
     if args.InvisiSpec:
