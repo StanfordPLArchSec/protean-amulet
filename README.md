@@ -1,5 +1,6 @@
 # Amulet with Protean Support
 This is a fork of Amulet with a number of added features enabling the testing of hardware-software codesigned Spectre defenses like Protean.
+The original Amulet README is [here](README.orig.md).
 
 An overview of the added features:
 - [LLVM-IR Test Generator](#LLVM-Test-Generator)
@@ -21,6 +22,9 @@ cmake -S llvm -B build
 cmake --build build --target llvm-stress
 ```
 To see how to use our custom fork of `llvm-stress`, see [src/generator_llvm.py].
+
+We also provide an out-of-tree LLVM-IR pass in [Sandbox.cpp](/Sandbox.cpp) for sandboxing the randomly generated LLVM-IR program to ensure that it does not crash at runtime.
+We will release instructions for compiling this later.
 
 ## Protean Support
 We merged Amulet's modifications to gem5 into a fork of our Protean gem5 branch, which you can find [here](https://anonymous.4open.science/r/protean-gem5-amulet).
