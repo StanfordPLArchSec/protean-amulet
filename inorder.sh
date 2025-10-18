@@ -36,19 +36,18 @@ run_one() {
     ./src/cli.py fuzz \
                  --cpu-type=X86TimingSimpleCPU \
                  -s $script_dir/base.json --generator=$generator --ruby --protean=None \
-                 -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_$2.pkl -t $asm -p protean-check-$2 > $3
+                 --ipc-show-output \
+                 -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_$2.pkl -t $asm -p protean-check-$2 | tee $3
 }
 
 get_num_uops() {
-    grep simOps results/protean-check-$1/stats_input1.txt
+    grep simOps results/protean-check-$1/stats_input1.txt | tail -1
 }
 
 run_check() {
     tmp1=$PWD/classify-log-1.txt
     tmp2=$PWD/classify-log-2.txt
     asm=$1/test_case_rvzr_input1.asm
-    extra_args=""
-    # extra_args="--ipc-show-output"
     conf=$1/configuration.yaml
     rm -f ~/log.out
     run_one $1 reference $tmp1
