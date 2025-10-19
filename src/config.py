@@ -288,6 +288,7 @@ class ConfCls:
     # Gem5 debug flags
     debug = False
     debug_flags = []
+    dump_stats = False
 
     # Can have multiple filters
     # Options: "squash", "content", "cache_visible"

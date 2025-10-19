@@ -43,6 +43,10 @@ def main():
         help="Number of test cases.",
     )
     parser_fuzz.add_argument(
+        "--dump-stats",
+        action="store_true"
+    )
+    parser_fuzz.add_argument(
         "-i", "--num-inputs",
         type=int,
         default=100,
@@ -515,6 +519,8 @@ def main():
 
     if args.cpu_type:
         CONF.cpu_type = args.cpu_type
+
+    CONF.dump_stats = args.dump_stats
         
     # InvisiSpec Config
     if args.InvisiSpec:
