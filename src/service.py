@@ -14,6 +14,7 @@ from typing import NoReturn, Optional
 import sys
 import shutil
 import time
+import os
 
 MASK_64BIT = pow(2, 64)
 
@@ -182,6 +183,7 @@ class Logger:
             self.redraw_mode = False if CONF.multiline_output else True
             self.start_time = start_time
         self.info("fuzzer", start_time.strftime('Starting at %H:%M:%S'))
+        self.info("fuzzer", f"pid: {os.getpid()}")
 
     def fuzzer_start_round(self, round_id):
         if __debug__ and round_id and round_id % 1000 == 0:
