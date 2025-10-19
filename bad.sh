@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+for path in "$@"; do
+    if ! grep -q "^Finished" "$path"; then
+	echo "$path"
+    fi
+done
