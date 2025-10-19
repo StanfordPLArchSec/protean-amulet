@@ -14,6 +14,10 @@ protean_args=(--protean=None --protean-pred-mode=Predict --protean-pred-size=102
 generator=--generator=llvm
 # generator=--generator=const:tmp2.asm
 
+if [[ "$I" == "" ]]; then
+	I=100
+fi
+
 if [[ "$NAME" = "" ]]; then
     NAME=protean
 fi
@@ -34,7 +38,7 @@ run_bench_archx() {
     name=protean-arch$1
     results_dir=$name/
     mkdir -p $results_dir
-    for ((i=0; i<100; ++i)); do
+    for ((i=0; i<$I; ++i)); do
         $src/cli.py fuzz \
                     --gen-seed=$RANDOM$RANDOM \
                     -s $script_dir/base.json \
@@ -63,7 +67,7 @@ run_bench_ctx() {
     name=protean-ct$1
     results_dir=$name/
     mkdir -p $results_dir
-    for ((i=0; i<100; ++i)); do
+    for ((i=0; i<$I; ++i)); do
         $src/cli.py fuzz \
                     --gen-seed=$RANDOM$RANDOM \
                     -s $script_dir/base.json \
@@ -143,9 +147,6 @@ run_bench_protx() {
     name=protean-prot$1
     results_dir=$name/
     mkdir -p $results_dir
-    if [[ "$I" == "" ]]; then
-	I=100
-    fi
     for ((i=0; i<$I; ++i)); do
         $src/cli.py fuzz \
                     --gen-seed=$RANDOM$RANDOM \
