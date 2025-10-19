@@ -2,6 +2,8 @@
 
 set -e
 
+source venv/bin/activate
+
 script_dir=$(dirname ${BASH_SOURCE[0]})
 src=$script_dir/src
 
@@ -18,13 +20,11 @@ fi
 
 run_debug() {
     i=0
-    # --nonstop
     $src/cli.py fuzz --gen-seed=$RANDOM$RANDOM --ipc-show-output --verbose -s $script_dir/base.json --generator=random --ruby ${protean_args[@]} -i 140 -n 200 -c $YAML_PROT -p protean-$i
 }
 
 run_bench() {
     for ((i=0; i<100; ++i)); do
-        # --nonstop
         $src/cli.py fuzz --gen-seed=$RANDOM$RANDOM -s $script_dir/base.json $generator --ruby ${protean_args[@]} -i 140 -n 200 -c $YAML -p protean-$i >&log-$i.txt &
     done
 }
@@ -143,7 +143,10 @@ run_bench_protx() {
     name=protean-prot$1
     results_dir=$name/
     mkdir -p $results_dir
-     for ((i=0; i<100; ++i)); do
+    if [[ "$I" == "" ]]; then
+	I=100
+    fi
+    for ((i=0; i<$I; ++i)); do
         $src/cli.py fuzz \
                     --gen-seed=$RANDOM$RANDOM \
                     -s $script_dir/base.json \
