@@ -224,7 +224,7 @@ class X86UnicornModel(Model):
             except UcError as e:
                 if not self.in_speculation:
                     self.print_state()
-                    LOGGER.error("[X86UnicornModel:trace_test_case] %s" % e)
+                    LOGGER.waring("model", "[X86UnicornModel:trace_test_case] %s" % e)
 
             # if we use one of the SPEC contracts, we might have some residual simulations
             # that did not reach the spec. window by the end of simulation. Those need
