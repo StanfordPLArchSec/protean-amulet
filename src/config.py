@@ -195,6 +195,8 @@ class ConfCls:
     protean_pred_mode = None
     protean_pred_size = None
 
+    gem5_script_opts = ""
+
     # DOLMA
     # - 0: Baseline (no protection)
     # - 1: DOLMA-Default (M+R)

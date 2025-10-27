@@ -193,6 +193,8 @@ def main():
     )
     parser_fuzz.add_argument("--protean-pred-mode")
     parser_fuzz.add_argument("--protean-pred-size")
+
+    parser_fuzz.add_argument("--gem5-script-opts", default="")
         
     parser_fuzz.add_argument(
         "--DOLMA",
@@ -559,6 +561,8 @@ def main():
             CONF.set('protean_pred_mode', args.protean_pred_mode)
         if args.protean_pred_size:
             CONF.set('protean_pred_size', args.protean_pred_size)
+
+    CONF.set('gem5_script_opts', args.gem5_script_opts)
         
     from pathlib import Path
     test_case = ''

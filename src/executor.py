@@ -263,6 +263,8 @@ class X86Gem5(Executor):
             if CONF.protean_pred_size:
                 cmd.append(f"--mieros-pred-size={CONF.protean_pred_size}")
 
+        cmd.extend(CONF.gem5_script_opts.split())
+
         if CONF.DOLMA:
             cmd.extend(["--mem-type=SimpleMemory"])
             if (CONF.DOLMA_mode == CONF.DOLMA_modes.Baseline):
@@ -520,7 +522,7 @@ class X86Gem5(Executor):
                 for entry in tlb:
                     if not entry.startswith('Entry'): continue
                     state.append(int(tlb[entry]['paddr']))
-                if not CONF.SpecLFB and not CONF.protean:
+                if False:
                     assert len(state) > 0, 'TLB is empty? Seems unlikely'
             elif src == "branch_pred_state":
                 branch_pred = tags['system']['cpu']['branchPred']
