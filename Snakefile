@@ -1,4 +1,8 @@
 num_instances = 100
+num_inputs = int(config.get("inputs", "140"))
+num_programs = int(config.get("programs", "200"))
+
+verbose = bool(int(config.get("verbose", "0")))
 
 class Defense:
     name = None
@@ -19,17 +23,17 @@ defenses = [
     Defense(
         name = "prottrack",
         gem5_dir = "gem5/protean",
-        script_opts = ["--protean=Track", "--protean-pred-mode=Predict", "--protean-pred-size=1024", "--speculation-model=AtRet"],
+        script_opts = ["--mieros=Track", "--mieros-pred-mode=Predict", "--mieros-pred-size=1024", "--speculation-model=AtRet"],
     ),
     Defense(
         name = "protdelay",
         gem5_dir = "gem5/protean",
-        script_opts = ["--protean=Delay", "--speculation-model=AtRet"],
+        script_opts = ["--mieros=Delay", "--speculation-model=AtRet"],
     ),
     Defense(
         name = "stt",
         gem5_dir = "gem5/stt",
-        script_opts = ["--stt", "--implicit-channel=Lazy", "--speculation-model=AtRet"],
+        script_opts = ["--stt", "--implicit-channel=Lazy", "--stt-bugfixes", "--speculation-model=AtRet"],
     ),
     Defense(
         name = "spt",
@@ -58,18 +62,27 @@ rule run_amulet_instance:
         script_opts = lambda w: get_defense(w).script_opts,
         result_dir = lambda w: \
             expand("{defense}-{observer}-{generator}", **w),
+        verbose_args = ["--ipc-show-output"] if verbose else [],
     retries: 3
     shell:
         "./src/cli.py fuzz --gen-seed=$RANDOM$RANDOM -s base.json "
         "--generator={wildcards.generator} --ruby --gem5-script-opts='{params.script_opts}' "
-        "-i 140 -n 200 "
+        f"-i {num_inputs} -n {num_programs} "
         "-c cache_and_tlb_{wildcards.observer}.yaml "
         "--result-dir={params.result_dir}/ "
         "-p {params.result_dir}-{wildcards.idx} "
         "--gem5-path={params.gem5_dir} --gem5-binary={params.gem5_dir}/build/X86/gem5.opt "
+        "{params.verbose_args} "
         "> {output} && "
         "! grep -q '^Buggy test' {output}"
 
+rule run_experiment_i:
+    output: "{defense}-{observer}-{generator}/all.{i}"
+    input:
+        lambda w: expand("{defense}-{observer}-{generator}/log-{idx}.txt", **w, idx=range(0, int(w.i)))
+    shell:
+        "touch {output}"
+        
 rule run_experiment:
     output: "{defense}-{observer}-{generator}/all"
     input:
