@@ -1,5 +1,7 @@
 num_instances = 100
-num_inputs = int(config.get("inputs", "140"))
+# Changed from 140 to 5, since the 'commit' microarchitectural observer
+# finds many more violations.
+num_inputs = int(config.get("inputs", "5"))
 num_programs = int(config.get("programs", "200"))
 
 verbose = bool(int(config.get("verbose", "0")))
@@ -38,7 +40,7 @@ defenses = [
     Defense(
         name = "spt",
         gem5_dir = "gem5/spt",
-        script_opts = ["--spt", "--fwdUntaint=1", "--bwdUntaint=1", "--enableShadowL1=1", "--spt-bugfix", "--speculation-model=AtRet"],
+        script_opts = ["--spt", "--fwdUntaint=1", "--bwdUntaint=1", "--enableShadowL1=1", "--speculation-model=AtRet"],
     ),
     Defense(
         name = "spt-sb",
