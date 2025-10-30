@@ -534,6 +534,9 @@ class X86Gem5(Executor):
             elif src == "access_timing" or src == "access_order":
                 log = tags['accessLog']['log']
                 state = [log]
+            elif src == "commit":
+                log = tags['commit']['log']
+                state = [log]
             else:
                 print(f'Unsupported source {src}')
                 exit(1)

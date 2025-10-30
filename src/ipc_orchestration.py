@@ -8,6 +8,7 @@ import os
 import time
 import re
 from typing import List
+import array
 
 OP_INIT = 0xd09e95bc2c73ad66
 OP_ACK_INIT = 0xc4f991d25774a0ac
@@ -25,6 +26,9 @@ OP_ACK_BRANCH_PREDICTION_LOG = 0xfccf2948b05f1841
 OP_ENABLE_ACCESS_LOG = 0x705c94b0572c79e2
 OP_GET_ACCESS_LOG = 0x6cedeb82908d6957
 OP_ACK_ACCESS_LOG = 0xa0e9b9ce1b96279d
+OP_RESET_COMMIT_LOG = 0xdeadbeefbaddecaf;
+OP_GET_COMMIT_LOG = 0xfeedfacefeedface;
+
 
 
 CODE_ADDR_START = 0x402000
@@ -170,12 +174,15 @@ class Gem5IPCOrchestration:
         src_predictions_timing = "branch_predictions_timing" in sources
         src_access_timing = "access_timing" in sources
         src_access_order = "access_order" in sources
+        src_commit = "commit" in sources
         if src_bp_state or src_predictions or src_predictions_timing:
             self.send(struct.pack('Q', OP_RESET_BRANCH_PREDICTOR))
         if src_predictions or src_predictions_timing:
             self.send(struct.pack('Q', OP_ENABLE_BRANCH_PREDICTION_LOG))
         if src_access_timing or src_access_order:
             self.send(struct.pack('Q', OP_ENABLE_ACCESS_LOG))
+        if src_commit:
+            self.send(struct.pack('Q', OP_RESET_COMMIT_LOG))
             
         # For now we disable input checking because we are using very large inputs
         # and it's slowing things down.
@@ -242,6 +249,16 @@ class Gem5IPCOrchestration:
                 if CODE_ADDR_START <= pc < CODE_ADDR_END:
                     filtered_log.append(entry)
             trace += '\n[accessLog]\nlog = ' + ';'.join(filtered_log) + '\n'
+        if src_commit:
+            self.send(struct.pack('Q', OP_GET_COMMIT_LOG))
+            op, length = struct.unpack('QQ', self.recv(16))
+            if op != OP_GET_COMMIT_LOG:
+                raise ValueError(f'expected OP_GET_COMMIT_LOG from gem5, got {op:016x}')
+            commits = array.array('Q', self.recv(length))
+            if len(commits) != 1:
+                raise ValueError("crap")
+            # print(commits)
+            trace += '\n[commit]\nlog = ' + ';'.join(map(str, commits)) + '\n'
 
         return trace
 
