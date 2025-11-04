@@ -1,0 +1,116 @@
+import os
+import re
+import json
+import glob
+
+def result_path(suffix):
+    return os.path.join("{defense}-{observer}-{generator}/results/{result}", suffix)
+
+def search_file(pattern, path):
+    matches = []
+    with open(path) as f:
+        for line in f:
+            if m := re.search(pattern, line):
+                matches.append(m)
+    return matches
+
+def search_file_one(pattern, path):
+    matches = search_file(pattern, path)
+    if len(matches) != 1:
+        print(f"expected 1 match, got {len(matches)}: pattern={pattern}, path={path}",
+              file=sys.stderr)
+        raise ValueError("")
+    return matches[0]
+
+def get_ctrace_from_file(path):
+    return search_file_one(r"^ctraces: (\[.*\])$", path).group(1)
+
+def get_htrace_from_file(path):
+    return search_file_one(r"^htraces: (\[.*\])$", path).group(1)
+
+rule result_inorder_single:
+    output:
+        directory(result_path("inorder_{input}"))
+    input:
+        config = result_path("configuration.yaml"),
+        pickle = result_path("inputpickle_{input}.pkl"),
+        asm = result_path("test_case_rvzr_input1.asm"),
+    wildcard_constraints:
+        input = r"(primer|reference)"
+    shell:
+        "rm -rf {output} && "
+        "mkdir -p {output} && "
+        "GEM5_DEBUG_FLAGS=ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff "
+        "GEM5_DEBUG_FILE=$(realpath {output}/dbgout.txt) "
+        "timeout 15 ./src/cli.py fuzz --generator={wildcards.generator} "
+        " --cpu-type=X86TimingSimpleCPU -s base.json --ruby "
+        "--protean=None --ipc-show-output --gem5-path=gem5/protean --gem5-binary=gem5/protean/build/X86/gem5.opt "
+        "-i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} -t {input.asm} --result-dir={output}/results -p protean-check-{wildcards.input} "
+        ">{output}/stdout.txt 2>{output}/stderr.txt "
+
+def do_inorder_triage_str(input):
+        input_stdout = list(map(lambda d: os.path.join(d, "stdout.txt"), input))
+        input_dbgout = list(map(lambda d: os.path.join(d, "dbgout.txt"), input))
+        ctraces1, ctraces2 = map(get_ctrace_from_file, input_stdout)
+        htraces1, htraces2 = map(get_htrace_from_file, input_stdout)
+        if ctraces1 != ctraces2:
+            return {
+                "result": "false-positive",
+                "reason": "mismatching-ctraces",
+            }
+        if htraces1 == htraces2:
+            return {
+                "result": "false-positive",
+                "reason": "matching-htraces",
+            }
+        # Do the dbgout's match? 
+        with open(input_dbgout[0]) as f1, \
+             open(input_dbgout[1]) as f2:
+            for l1, l2 in zip(f1, f2):
+                if l1 != l2:
+                    return {
+                        "result": "false-positive",
+                        "reason": "mismatching-dbgouts",
+                        "culprit-lines": [l1, l2],
+                    }
+        # Was there a unicorn exception?
+        errs = search_file(r"Unhandled CPU exception \(UC_ERR_EXCEPTION\)",
+                           input_stdout[0])
+        if len(errs) > 0:
+            return {
+                "result": "false-positive",
+                "reason": "unicorn-exception",
+            }
+        
+        # True violation.
+        return {
+            "result": "true-positive",
+            "reason": "none",
+        }
+
+def do_inorder_triage(input, output):
+    result = do_inorder_triage_str(input)
+    with open(output, "wt") as f:
+        json.dump(result, f)
+        f.write("\n")
+        
+rule result_inorder_triage:
+    output:
+        result_path("triage.json")
+    input:
+        lambda w: expand(result_path("inorder_{input}"), **w, input=["reference", "primer"])
+    run:
+        output, = output
+        do_inorder_triage(input, output)
+
+def list_results(wildcards):
+    results_dir, = \
+        expand("{defense}-{observer}-{generator}/results", **wildcards)
+    return glob.glob(os.path.join(results_dir, "*hrs-*mins-*secs"))
+        
+rule triage_all:
+    output:
+        # PHONY
+        "{defense}-{observer}-{generator}/triage"
+    input:
+        lambda w: [os.path.join(d, "triage.json") for d in list_results(w)]

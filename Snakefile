@@ -23,29 +23,45 @@ defenses = [
         script_opts = [],
     ),
     Defense(
-        name = "prottrack",
+        name = "protean.track",
         gem5_dir = "gem5/protean",
         script_opts = ["--mieros=Track", "--mieros-pred-mode=Predict", "--mieros-pred-size=1024", "--speculation-model=AtRet"],
     ),
     Defense(
-        name = "protdelay",
+        name = "protean.delay",
         gem5_dir = "gem5/protean",
         script_opts = ["--mieros=Delay", "--speculation-model=AtRet"],
     ),
     Defense(
-        name = "stt",
+        name = "stt.0",
         gem5_dir = "gem5/stt",
-        script_opts = ["--stt", "--implicit-channel=Lazy", "--stt-bugfixes", "--speculation-model=AtRet"],
+        script_opts = ["--stt", "--implicit-channel=Lazy", "--speculation-model=AtRet"],
     ),
     Defense(
-        name = "spt",
+        name = "stt.1",
+        gem5_dir = "gem5/stt",
+        script_opts = ["--stt", "--implicit-channel=Lazy", "--speculation-model=AtRet", "--stt-bugfix-store"],
+    ),
+    Defense(
+        name = "stt.2",
+        gem5_dir = "gem5/stt",
+        script_opts = ["--stt", "--implicit-channel=Lazy", "--speculation-model=AtRet", "--stt-bugfix-store", "--stt-bugfix-pending"],
+    ),
+    Defense(
+        name = "spt.0",
         gem5_dir = "gem5/spt",
         script_opts = ["--spt", "--fwdUntaint=1", "--bwdUntaint=1", "--enableShadowL1=1", "--speculation-model=AtRet"],
     ),
     Defense(
-        name = "spt-sb",
+        name = "spt.1",
         gem5_dir = "gem5/spt",
-        script_opts = ["--spt", "--disableUntaint=1", "--speculation-model=AtRet"],
+        script_opts = ["--spt", "--fwdUntaint=1", "--bwdUntaint=1", "--enableShadowL1=1", "--speculation-model=AtRet",
+                       "--spt-bugfix-pending"],
+    ),
+    Defense(
+        name = "spt.sb",
+        gem5_dir = "gem5/spt",
+        script_opts = ["--spt", "--disableUntaint=1", "--speculation-model=AtRet", "--spt-bugfix-pending"],
     ),
 ]
 
@@ -65,7 +81,7 @@ rule run_amulet_instance:
         result_dir = lambda w: \
             expand("{defense}-{observer}-{generator}", **w),
         verbose_args = ["--ipc-show-output"] if verbose else [],
-    retries: 3
+    retries: 1
     shell:
         "./src/cli.py fuzz --gen-seed=$RANDOM$RANDOM -s base.json "
         "--generator={wildcards.generator} --ruby --gem5-script-opts='{params.script_opts}' "
@@ -75,8 +91,8 @@ rule run_amulet_instance:
         "-p {params.result_dir}-{wildcards.idx} "
         "--gem5-path={params.gem5_dir} --gem5-binary={params.gem5_dir}/build/X86/gem5.opt "
         "{params.verbose_args} "
-        "> {output} && "
-        "! grep -q '^Buggy test' {output}"
+        "> {output} 2>&1 && "
+        "! grep '^Buggy test' {output}"
 
 rule run_experiment_i:
     output: "{defense}-{observer}-{generator}/all.{i}"
@@ -92,17 +108,4 @@ rule run_experiment:
     shell:
         "touch {output}"
 
-rule getcmd_amulet_instance:
-    output: "{defense}-{observer}-{generator}/results/{resultdir}/run.sh"
-    params:
-        resultdir = "{defense}-{observer}-{generator}/results/{resultdir}"
-    run:
-        cmd = [
-            "./src/cli.py", "fuzz",
-            "--ipc-show-output", "-s", "base.json",
-            "--generator=llvm", "--ruby",
-            "-i", "1", "-n", "1",
-            "-c", os.path.join(wildcards.resultdir,
-                               "configuration.yaml"),
-            "--verbose",
-        ]        
+include: "rules/triage.smk"
