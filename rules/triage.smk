@@ -55,11 +55,17 @@ rule result_inorder_single:
         "-i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} -t {input.asm} --result-dir={output}/results -p protean-check-{wildcards.input} "
         ">{output}/stdout.txt 2>{output}/stderr.txt "
 
-def do_inorder_triage_str(input):
-        input_stdout = list(map(lambda d: os.path.join(d, "stdout.txt"), input))
-        input_dbgout = list(map(lambda d: os.path.join(d, "dbgout.txt"), input))
-        ctraces1, ctraces2 = map(get_ctrace_from_file, input_stdout)
-        htraces1, htraces2 = map(get_htrace_from_file, input_stdout)
+def do_triage_str(input):
+        inorder_input_stdout = \
+            list(map(lambda d: os.path.join(d, "stdout.txt"), input.inorder))
+        inorder_input_dbgout = \
+            list(map(lambda d: os.path.join(d, "dbgout.txt"), input.inorder))
+        ooo_input_stdout = \
+            list(map(lambda d: os.path.join(d, "stdout.txt"), input.ooo))
+        ooo_input_dbgout = \
+            list(map(lambda d: os.path.join(d, "dbgout.txt"), input.ooo))
+        ctraces1, ctraces2 = map(get_ctrace_from_file, ooo_input_stdout)
+        htraces1, htraces2 = map(get_htrace_from_file, ooo_input_stdout)
         if ctraces1 != ctraces2:
             return {
                 "result": "false-positive",
@@ -71,8 +77,8 @@ def do_inorder_triage_str(input):
                 "reason": "matching-htraces",
             }
         # Do the dbgout's match? 
-        with open(input_dbgout[0]) as f1, \
-             open(input_dbgout[1]) as f2:
+        with open(inorder_input_dbgout[0]) as f1, \
+             open(inorder_input_dbgout[1]) as f2:
             for l1, l2 in zip(f1, f2):
                 if l1 != l2:
                     return {
@@ -82,7 +88,7 @@ def do_inorder_triage_str(input):
                     }
         # Was there a unicorn exception?
         errs = search_file(r"Unhandled CPU exception \(UC_ERR_EXCEPTION\)",
-                           input_stdout[0])
+                           inorder_input_stdout[0])
         if len(errs) > 0:
             return {
                 "result": "false-positive",
@@ -95,20 +101,25 @@ def do_inorder_triage_str(input):
             "reason": "none",
         }
 
-def do_inorder_triage(input, output):
-    result = do_inorder_triage_str(input)
+def do_triage(input, output):
+    result = do_triage_str(input)
     with open(output, "wt") as f:
         json.dump(result, f)
         f.write("\n")
         
-rule result_inorder_triage:
+rule result_triage:
     output:
         result_path("triage.json")
     input:
-        lambda w: expand(result_path("inorder_{input}"), **w, input=["reference", "primer"])
+        inorder = lambda w: \
+            expand(result_path("inorder_{input}"), **w,
+                   input=["reference", "primer"]),
+        ooo = lambda w: \
+            expand(result_path("ooo_{input}"), **w,
+                   input=["reference", "primer"]),
     run:
         output, = output
-        do_inorder_triage(input, output)
+        do_triage(input, output)
 
 def list_results(wildcards):
     results_dir, = \
