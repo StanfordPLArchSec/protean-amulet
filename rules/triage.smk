@@ -28,6 +28,9 @@ def get_ctrace_from_file(path):
 def get_htrace_from_file(path):
     return search_file_one(r"^htraces: (\[.*\])$", path).group(1)
 
+def get_inorder_gem5_debug_flags(w):
+    ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff
+
 rule result_inorder_single:
     output:
         directory(result_path("inorder_{input}"))
@@ -37,12 +40,16 @@ rule result_inorder_single:
         asm = result_path("test_case_rvzr_input1.asm"),
     wildcard_constraints:
         input = r"(primer|reference)"
+    params:
+        gem5_debug_flags = lambda w: \
+            "ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff" + \
+            ",ExecAll" if w.observer == "arch" else "",
     shell:
         "rm -rf {output} && "
         "mkdir -p {output} && "
-        "GEM5_DEBUG_FLAGS=ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff "
+        "GEM5_DEBUG_FLAGS={params.gem5_debug_flags} "
         "GEM5_DEBUG_FILE=$(realpath {output}/dbgout.txt) "
-        "timeout 15 ./src/cli.py fuzz --generator={wildcards.generator} "
+        "timeout 30 ./src/cli.py fuzz --generator={wildcards.generator} "
         " --cpu-type=X86TimingSimpleCPU -s base.json --ruby "
         "--protean=None --ipc-show-output --gem5-path=gem5/protean --gem5-binary=gem5/protean/build/X86/gem5.opt "
         "-i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} -t {input.asm} --result-dir={output}/results -p protean-check-{wildcards.input} "
@@ -114,3 +121,42 @@ rule triage_all:
         "{defense}-{observer}-{generator}/triage"
     input:
         lambda w: [os.path.join(d, "triage.json") for d in list_results(w)]
+
+triage_ooo_flags = config.get("triage_ooo_flags", "O3CPUAll")
+        
+rule result_ooo_single:
+    output:
+        directory(result_path("ooo_{input}"))
+    input:
+        config = result_path("configuration.yaml"),
+        pickle = result_path("inputpickle_{input}.pkl"),
+        asm = result_path("test_case_rvzr_input1.asm"),
+    wildcard_constraints:
+        input = r"(primer|reference)"
+    params:
+        gem5_dir = lambda w: get_defense(w).gem5_dir,
+        script_opts = lambda w: get_defense(w).script_opts,
+        triage_ooo_flags = triage_ooo_flags,
+    shell:
+        "rm -rf {output} && "
+        "mkdir -p {output} && "
+        "GEM5_DEBUG_FLAGS={params.triage_ooo_flags} "
+        "GEM5_DEBUG_FILE=$(realpath {output}/dbgout.txt) "
+        "timeout 30 ./src/cli.py fuzz --generator={wildcards.generator} "
+        "    --cpu-type=X86O3CPU -s base.json --ruby "
+        "    --gem5-script-opts='{params.script_opts}' "
+        "    --ipc-show-output --gem5-path={params.gem5_dir} "
+        "    --gem5-binary={params.gem5_dir}/build/X86/gem5.opt "
+        "    -i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} "
+        "    -t {input.asm} --result-dir={output}/results "
+        "    -p protean-check-{wildcards.input} "
+        "    >{output}/stdout.txt 2>{output}/stderr.txt "
+        
+rule result_ooo_triage:
+    output:
+        result_path("ooo")
+    input:
+        lambda w: expand(result_path("ooo_{input}"), **w,
+                                     input=["reference", "primer"])
+    shell:
+        "touch {output}"
