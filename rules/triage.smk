@@ -77,8 +77,8 @@ def do_triage_str(input):
                 "reason": "matching-htraces",
             }
         # Do the dbgout's match? 
-        with open(inorder_input_dbgout[0]) as f1, \
-             open(inorder_input_dbgout[1]) as f2:
+        with open(ooo_input_dbgout[0]) as f1, \
+             open(ooo_input_dbgout[1]) as f2:
             for l1, l2 in zip(f1, f2):
                 if l1 != l2:
                     return {
@@ -133,7 +133,16 @@ rule triage_all:
     input:
         lambda w: [os.path.join(d, "triage.json") for d in list_results(w)]
 
-triage_ooo_flags = config.get("triage_ooo_flags", "O3CPUAll")
+def triage_ooo_flags_impl(w):
+    if x := config.get("triage_ooo_flags"):
+        return x
+    elif w.observer == "arch":
+        return "ExecAll,FmtTicksOff"
+    else:
+        return "ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff"
+
+def triage_ooo_flags(w):
+    return triage_ooo_flags_impl(w) + ",FmtTicksOff"
         
 rule result_ooo_single:
     output:
