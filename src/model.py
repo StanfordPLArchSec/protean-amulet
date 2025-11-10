@@ -12,7 +12,9 @@ import unicorn as uni
 import copy
 import re
 import sys
+import time
 from unicorn import Uc, UcError, UC_MEM_WRITE
+import unicorn.x86_const
 from unicorn.x86_const import UC_X86_REG_RSP, UC_X86_REG_RBP, \
     UC_X86_REG_RIP, \
     UC_X86_REG_EFLAGS, UC_X86_REG_RAX, UC_X86_REG_RBX, UC_X86_REG_RCX, UC_X86_REG_RDX, \
@@ -28,6 +30,7 @@ from service import LOGGER
 import xxhash
 import json
 import capstone
+import collections
 
 FLAGS_CF = 0b000000000001
 FLAGS_PF = 0b000000000100
@@ -366,7 +369,7 @@ class X86UnicornModel(Model):
         pass  # Implemented by subclasses
 
     @staticmethod
-    def speculate_mem_access(emulator, access, address, size, value, model):
+    def speculate_mem_access(emulator: Uc, access, address, size, value, model):
         pass  # Implemented by subclasses
 
     @staticmethod
@@ -405,6 +408,9 @@ class TaintTrackerInterface(ABC):
         pass
 
     def taint_memory_store(self):
+        pass
+
+    def taint_reg(self, reg):
         pass
 
     def checkpoint(self):
@@ -606,6 +612,22 @@ class TaintTracker(TaintTrackerInterface):
         for addr in self.dest_mems:
             self.pending_taint.append(addr)
 
+    def taint_reg(self, reg):
+        if reg in ["SS", "DS", "CS", "FS", "GS"]:
+            return
+        patterns = [
+            r"([ABCD])[XHL]",
+            r"R([0-9]+)",
+            r"(DI|SI)",
+            r"(SP|BP)",
+            r"(FLAGS)",
+        ]
+        for pattern in patterns:
+            if m := re.search(pattern, reg):
+                self.pending_taint.append(m.group(1))
+                return
+        raise ValueError(f"unhandled register: {reg}")
+
     def checkpoint(self):
         if self._instruction:
             self._finalize_instruction()
@@ -747,7 +769,7 @@ class CTXTracer(CTTracer):
 
     def get_regval(self, cs_reg, model) -> int:
         reg = self.cs.reg_name(cs_reg)
-        reg = eval(f"UC_X86_REG_{reg.upper()}")
+        reg = eval(f"unicorn.x86_const.UC_X86_REG_{reg.upper()}")
         reg = model.emulator.reg_read(reg)
         return reg
         
@@ -784,7 +806,7 @@ class ProtTracer(CTRTracer):
 
     def get_regval(self, cs_reg, model) -> int:
         reg = self.cs.reg_name(cs_reg)
-        reg = eval(f"UC_X86_REG_{self.cs_to_uc_regname(reg).upper()}")
+        reg = eval(f"unicorn.x86_const.UC_X86_REG_{self.cs_to_uc_regname(reg).upper()}")
         reg = model.emulator.reg_read(reg)
         return reg
 
@@ -820,17 +842,255 @@ class ProtTracer(CTRTracer):
             return
 
         # Expose ouptut registers, since the instruction is unprotected.
-        for reg in insn.regs_write:
+        for reg in self.regs_write(insn):
             self.add_pc_to_trace(self.get_regval(reg, model), model)
+
+class CTSTracer(CTXTracer):
+    def __init__(self):
+        super().__init__()
+        self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+        self.cs.detail = True
+        self.clear_analysis()
+
+    def clear_analysis(self):
+        self.analyzed = False
+        self.insns = dict()
+        self.succs = collections.defaultdict(set)
+        self.unprots_pre = collections.defaultdict(set)
+        self.unprots_post = collections.defaultdict(set)
+
+    def reset_trace(self, emulator):
+        super().reset_trace(emulator)
+        self.clear_analysis()
+        
+    def get_insns(self, address, model):
+        # Get the instructions.
+        address_base = address & ~0xFFF
+        code_bytes = model.emulator.mem_read(address_base, 0x1000)
+        for insn in self.cs.disasm(code_bytes, address_base):
+            self.insns[insn.address] = insn
+
+    def lookup_insn(self, address):
+        return self.insns.get(address, None)
+
+    def construct_cfg(self):
+        for src_insn in self.insns.values():
+            if capstone.CS_GRP_JUMP in src_insn.groups:
+                assert capstone.CS_GRP_BRANCH_RELATIVE in src_insn.groups
+                targets = [src_insn.operands[0].imm]
+                if src_insn.opcode != capstone.x86_const.X86_INS_JMP:
+                    targets.append(src_insn.address + src_insn.size)
+            else:
+                targets = [src_insn.address + src_insn.size]
+
+            targets = list(filter(lambda x: x, map(self.lookup_insn, targets)))
+            self.succs[src_insn] = targets
+
+    def merge(self, pred):
+        for succ in self.succs[pred]:
+            self.unprots_post[pred].update(self.unprots_pre[succ])
+
+    def regs_read(self, insn):
+        return insn.regs_access()[0]
+
+    def regs_write(self, insn):
+        return insn.regs_access()[1]
+
+    def subregs_str(self, reg):
+        # subreg maps
+        d = [
+            # TODO: Add high bytes?
+            # r8-r15 subregs
+            (r"r(\d+)", ["r{}d"]),
+            (r"r(\d+)d", ["r{}w"]),
+            (r"r(\d+)w", ["r{}b"]),
+            (r"r(\d+)b", []),
+            # rax-rdx subregs
+            (r"r([abcd])x", ["e{}x"]),
+            (r"e([abcd])x", ["{}x"]),
+            (r"([abcd])x", ["{}h", "{}l"]),
+            (r"[abcd][hl]", []),
+            # rdi, rsi subregs
+            (r"r([ds])i", ["e{}i"]),
+            (r"e([ds])i", ["{}i"]),
+            (r"([ds])i", ["{}il"]),
+            (r"[ds]il", []),
+            # rsp, rbp subregs
+            (r"r([sb])p", ["e{}p"]),
+            (r"e([sb])p", ["{}p"]),
+            (r"([sb])p", ["{}pl"]),
+            (r"[sb]pl", []),
+            # segment registers
+            (r"([cdsefg])s", []),
+            # rflags
+            (r"rflags", []),
+        ]
+
+        l = [reg]
+        for pat, subfmts in d:
+            if m := re.fullmatch(pat, reg):
+                for fmt in subfmts:
+                    # print(f"recursing {reg=} {pat=} {fmt=}", file=sys.stderr)
+                    subreg = fmt.format(*m.groups())
+                    l.extend(self.subregs_str(subreg))
+                return l
+        raise ValueError(f"failed to match register {reg}")
+
+    def subregs(self, reg):
+        subregs_str = self.subregs_str(self.cs.reg_name(reg))
+        def f(x):
+            if x == "rflags":
+                x = "eflags"
+            return eval(f"capstone.x86_const.X86_REG_{x.upper()}")
+        return list(map(f, subregs_str))
+
+    def get_unprot_operands(self, insn):
+        ops = []
+        # If it's a branch, then add all inputs.
+        if capstone.CS_GRP_JUMP in insn.groups:
+            for x in self.regs_read(insn):
+                ops.append(x)
+        # If it accesses memory, add all memory operands.
+        for op in insn.operands:
+            if op.access & (capstone.CS_AC_READ | capstone.CS_AC_WRITE):
+                if x := op.mem.base:
+                    ops.append(x)
+                if x := op.mem.index:
+                    ops.append(x)
+        return ops
+
+    def expand_subregs(self, l):
+        out = []
+        for x in l:
+            out.extend(self.subregs(x))
+        return out
+
+    def transfer(self, insn):
+        v = set(self.unprots_post[insn])
+
+        # Are any defs unprotected?
+        unprot_defs = any(map(lambda x: x in v, self.regs_write(insn)))
+
+        # Remove defs.
+        for x in self.regs_write(insn):
+            v.discard(x)
+
+        # Add in any transmitted operands.
+        v.update(self.get_unprot_operands(insn))
+
+        # Add in all uses if a def was unprotected.
+        if unprot_defs:
+            v.update(self.regs_read(insn))
+
+        if False:
+            print(f"DEBUG: {insn.mnemonic} {insn.op_str}: ",
+                  *map(self.cs.reg_name, self.regs_write(insn) + self.regs_read(insn)))
+            print(f"DEBUG: {unprot_defs=}")
+            print(f"DEBUG: unprot_pre:", *map(self.cs.reg_name, self.unprots_pre[insn]))
+            print(f"DEBUG: unprot_post:", *map(self.cs.reg_name, self.unprots_post[insn]))
+
+        self.unprots_pre[insn] = set(self.expand_subregs(v))
+
+    def dataflow_snapshot(self):
+        return (dict(self.unprots_pre.items()),
+                dict(self.unprots_post.items()))
+                    
+    def dataflow_analysis_one(self):
+        old = self.dataflow_snapshot()
+        for insn in self.insns.values():
+            self.merge(insn)
+            self.transfer(insn)
+        new = self.dataflow_snapshot()
+        return old != new
+
+    def dataflow_analysis(self):
+        t0 = time.process_time()
+        num_iters = 0
+        while changed := self.dataflow_analysis_one():
+            num_iters += 1
+            if num_iters > 1000:
+                raise RuntimeError("dataflow analysis braindead")
+            pass
+        t1 = time.process_time()
+        print(f"\ndataflow analysis time: {t1-t0}s", file=sys.stderr)
+
+    def print_analysis(self):
+        addrs = sorted(list(self.insns.keys()))
+        
+        # Print the successor map.
+        for addr in addrs:
+            insn = self.insns[addr]
+            succs = map(lambda x: f"{x.address:#x}", self.succs[insn])
+            print(f"CFG: {addr:#x} ->", *succs)
+        print("-----")
+        
+        # Print the data-flow. 
+        for addr in sorted(list(self.insns.keys())):
+            insn = self.insns[addr]
+            unprot_regs = map(self.cs.reg_name,
+                              self.unprots_pre[insn])
+            print("#", *unprot_regs)
+            print(f"{insn.address:#x} {insn.mnemonic} {insn.op_str}")
+
+    def analyze_binary(self, address: int, model):
+        self.get_insns(address, model)
+        self.construct_cfg()
+        self.dataflow_analysis()
+        if CONF.verbose:
+            self.print_analysis()
+
+    def cs_to_uc_regname(self, cs_reg):
+        if cs_reg == "rflags":
+            return "eflags"
+        # elif cs_reg.startswith("e"):
+        #     return "r" + cs_reg.removeprefix("e")
+        else:
+            return cs_reg
+        
+    def get_regval(self, cs_reg, model) -> int:
+        reg = self.cs.reg_name(cs_reg)
+        if reg in ["cs", "ds", "ss", "fs", "gs", "es"]:
+            return 0
+        reg = eval(f"unicorn.x86_const.UC_X86_REG_{self.cs_to_uc_regname(reg).upper()}")
+        reg = model.emulator.reg_read(reg)
+        return reg
+        
+    def observe_instruction(self, address: int, size: int, model):
+        if not self.analyzed:
+            self.analyze_binary(address, model)
+            self.analyzed = True
+
+        super().observe_instruction(address, size, model)
+
+        # Expose all unprotected registers.
+        if insn := self.lookup_insn(address):
+            for reg in self.unprots_pre[insn]:
+                x = self.get_regval(reg, model)
+                if False:
+                    print(f"TRACE: pc={address:#x} reg={self.cs.reg_name(reg)} "
+                          f"val={x:#x}", file=sys.stderr)
+                self.trace.append(x)
+                model.taint_tracker.taint_reg(self.cs.reg_name(reg).upper())
         
                         
 class ArchTracer(CTRTracer):
+    def __init__(self):
+        super().__init__()
+        self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+        self.cs.detail = True
+
+    def observe_instruction(self, address: int, size: int, model):
+        super().observe_instruction(address, size, model)
+        insn, = list(self.cs.disasm(model.emulator.mem_read(address, size), address, 1))
+        # print(f"ARCH insn {insn.mnemonic} {insn.op_str}")
 
     def observe_mem_access(self, access, address, size, value, model: X86UnicornModel):
         if access == uni.UC_MEM_READ:
             val = int.from_bytes(model.emulator.mem_read(address, size), byteorder='little')
             self.trace.append(val)
             model.taint_tracker.taint_memory_load()
+            insn, = list(self.cs.disasm(model.emulator.mem_read(model.emulator.reg_read(UC_X86_REG_RIP), 16), 0, 1))
+            # print(f"ARCH pc={model.emulator.reg_read(UC_X86_REG_RIP):#x} {address=:#x} {val=:#x} {size=} disasm={insn.mnemonic} {insn.op_str}")
         self.add_mem_address_to_trace(address, model)
         super(ArchTracer, self).observe_mem_access(access, address, size, value, model)
 
@@ -1159,6 +1419,8 @@ def get_model(bases: Tuple[int, int]) -> Model:
             model.tracer = ArchTracer()
         elif CONF.contract_observation_clause == 'prot':
             model.tracer = ProtTracer()
+        elif CONF.contract_observation_clause == 'cts':
+            model.tracer = CTSTracer()
         else:
             ConfigException("unknown value of `contract_observation_clause` configuration option")
             exit(1)
