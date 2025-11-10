@@ -5,6 +5,8 @@ set -u
 
 script_dir=./
 
+source venv/bin/activate
+
 dirs=()
 verbose=0
 while (( $# )); do
@@ -33,10 +35,11 @@ cat_if() {
 }
 
 run_one() {
-    ./src/cli.py fuzz \
+    timeout 15 ./src/cli.py fuzz \
                  --cpu-type=X86TimingSimpleCPU \
                  -s $script_dir/base.json --generator=$generator --ruby --protean=None \
                  --ipc-show-output \
+                 --gem5-path=gem5/protean --gem5-binary=gem5/protean/build/X86/gem5.opt \
                  -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_$2.pkl -t $asm -p protean-check-$2 | tee $3
 }
 
@@ -50,8 +53,8 @@ run_check() {
     asm=$1/test_case_rvzr_input1.asm
     conf=$1/configuration.yaml
     rm -f ~/log.out
-    run_one $1 reference $tmp1
-    run_one $1 primer $tmp2
+    GEM5_DEBUG_FILE=$PWD/dbgout1.txt run_one $1 reference $tmp1
+    GEM5_DEBUG_FILE=$PWD/dbgout2.txt run_one $1 primer $tmp2
     num_ctraces=$(cat $tmp1 $tmp2 | grep ctrace | uniq | wc -l | cut -d' ' -f1)
     num_htraces=$(cat $tmp1 $tmp2 | grep htrace | uniq | wc -l | cut -d' ' -f1)
     if (( $num_ctraces != 1 )); then
@@ -61,6 +64,7 @@ run_check() {
         # violation
         # echo "[*] true positive: $1"
         if (( verbose )); then
+            echo $tmp1 $tmp2
             grep -e ctrace -e htrace $tmp1 $tmp2
         fi
         return 1
@@ -71,6 +75,11 @@ run_check() {
         return 1
     else
         # no violation
+        if (( verbose )); then
+            echo results/protean-check-{reference,primer}/stats_input1.txt
+            get_num_uops reference
+            get_num_uops primer
+        fi
         return 0
     fi
 }

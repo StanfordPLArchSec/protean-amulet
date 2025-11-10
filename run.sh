@@ -172,29 +172,24 @@ run_bench_prottrack() {
     run_bench_protx track Track
 }
 
-run_analyze() {
-    python3 $src/analyse_ipc_violation.py --args="--ruby ${protean_args[*]} -c $YAML" "$@"
-}
-
-run_one() {
-    # Join the pickles?
-    # python3 -c 'import pickle; x = pickle.load(open("violation/inputpickle_input2.pkl", "rb")) + pickle.load(open("violation/inputpickle_input2.pkl", "rb")); pickle.dump(x, open("violation/inputpickle_merged.pkl", "wb"))'
-    # $src/cli.py fuzz -s $script_dir/base.json $generator --ruby ${protean_args[@]} -i 1 -n 1 -c $YAML --verbose -ic violation/inputpickle_merged.pkl -t $1
-    $src/cli.py fuzz -s $script_dir/base.json $generator --ruby ${protean_args[@]} -i 1 -n 1 -c $YAML --verbose --ipc-show-output -ic violation/inputpickle_$1.pkl -t violation/test_case_rvzr_input1.asm --analysis_run
-}
-
 run_check() {
     tmp1=`mktemp`
     tmp2=`mktemp`
     asm=$1/test_case_rvzr_input1.asm
     if [[ "$2" != "" ]]; then
-        asm="$2"
+        asm="$3"
     fi
     extra_args=""
     # extra_args="--ipc-show-output"
     conf=$1/configuration.yaml
-    GEM5_DEBUG_FILE=$PWD/dbgout1.txt $src/cli.py fuzz --ipc-show-output -s $script_dir/base.json $extra_args --generator=llvm --ruby ${protean_args[@]} -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_reference.pkl -t $asm -p protean-check-0 | tee $tmp1
-    GEM5_DEBUG_FILE=$PWD/dbgout2.txt $src/cli.py fuzz -s $script_dir/base.json $extra_args --generator=llvm --ruby ${protean_args[@]} -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_primer.pkl -t $asm -p protean-check-1 | tee $tmp2
+    gem5_dir=gem5/spt2
+    protean_args=(--gem5-path=$gem5_dir --gem5-binary=$gem5_dir/build/X86/gem5.opt)
+    # protean_args+=(--gem5-script-opts='--stt --implicit-channel=Lazy --speculation-model=AtRet')
+    protean_args+=(--gem5-script-opts='--spt --fwdUntaint=1 --bwdUntaint=1 --enableShadowL1=1 --spt-bugfix-pending --speculation-model=AtRet')
+    # protean_args+=(--gem5-script-opts='--mieros=Delay --speculation-model=AtRet')
+    generator=llvm.arch
+    GEM5_DEBUG_FILE=$PWD/dbgout1.txt $src/cli.py fuzz --ipc-show-output -s $script_dir/base.json $extra_args --generator=$generator --ruby "${protean_args[@]}" -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_reference.pkl -t $asm -p protean-check-0 | tee $tmp1
+    GEM5_DEBUG_FILE=$PWD/dbgout2.txt $src/cli.py fuzz -s $script_dir/base.json $extra_args --generator=$generator --ruby "${protean_args[@]}" -i 1 -n 1 -c $conf --verbose -ic $1/inputpickle_primer.pkl -t $asm -p protean-check-1 | tee $tmp2
     num_ctraces=$(cat $tmp1 $tmp2 | grep ctrace | uniq | wc -l | cut -d' ' -f1)
     num_htraces=$(cat $tmp1 $tmp2 | grep htrace | uniq | wc -l | cut -d' ' -f1)
     if (( $num_ctraces != 1 )); then

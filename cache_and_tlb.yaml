@@ -57,7 +57,7 @@ gem5_restore:  0 # DEBUG: Need priming if using checkpoints
 gem5_ipc_parallelism: 1
 
 gem5_attacker_mode:
-   sources : ["data_cache", "dtlb"]
+   sources : ["data_cache", "dtlb", "commit"]
 
 logging_modes:
   - info
