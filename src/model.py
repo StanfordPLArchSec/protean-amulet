@@ -997,7 +997,7 @@ class CTSTracer(CTXTracer):
                     
     def dataflow_analysis_one(self):
         old = self.dataflow_snapshot()
-        for insn in self.insns.values():
+        for _, insn in sorted(self.insns.items(), reverse=True):
             self.merge(insn)
             self.transfer(insn)
         new = self.dataflow_snapshot()

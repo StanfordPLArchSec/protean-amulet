@@ -256,12 +256,12 @@ class X86Gem5(Executor):
 
 
         if CONF.protean:
-            cmd.append(f"--mieros={CONF.protean}")
+            cmd.append(f"--protean={CONF.protean}")
             cmd.append("--speculation-model=AtRet")
             if CONF.protean_pred_mode:
-                cmd.append(f"--mieros-pred-mode={CONF.protean_pred_mode}")
+                cmd.append(f"--protean-pred-mode={CONF.protean_pred_mode}")
             if CONF.protean_pred_size:
-                cmd.append(f"--mieros-pred-size={CONF.protean_pred_size}")
+                cmd.append(f"--protean-pred-size={CONF.protean_pred_size}")
 
         cmd.extend(CONF.gem5_script_opts.split())
 
@@ -792,7 +792,10 @@ class X86Gem5(Executor):
                 # Pass flag here: DONT TRUST THIS HWTRACE!
                 # If donttrust flag and vio, then not a real vio
                 self.copy_bugs(id_,input_,test_case_path)
+                print("==== GEM5 STDOUT ====")
+                print(gem5_output)
                 LOGGER.report_bug()
+                exit(1)
                 # If a bug happens for one input it will likely happen for other inputs.
                 # This can really slow down fuzzing, since we have to wait for the gem5 process to time out.
                 # So, whenever one bug happens, report all remaining traces as buggy

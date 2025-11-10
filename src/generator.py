@@ -519,15 +519,13 @@ class X86Generator(ConfigurableGenerator, abc.ABC):
         "CMOVPO": "CMOVNP",
     }
 
-    def __init__(self, instruction_set: InstructionSet):
+    def __init__(self, instruction_set: InstructionSet, prot = False):
         super(X86Generator, self).__init__(instruction_set)
         self.passes = [
             X86SandboxPass(),
             X86PatchUndefinedFlagsPass(self.instruction_set, self),
             X86PatchUndefinedResultPass(),
         ]
-        if CONF.contract_observation_clause == 'prot':
-            self.passes.append(X86RandomProtectPass())
         self.printer = X86Printer()
         self.register_set = X86Registers()
 
@@ -1285,18 +1283,25 @@ class X86RandomGenerator(X86Generator, RandomGenerator):
     def __init__(self, instruction_set: InstructionSet):
         super().__init__(instruction_set)
 
+class X86RandomProtGenerator(X86RandomGenerator):
+    def __init__(self, instruction_set: InstructionSet):
+        super().__init__(instruction_set)
+        self.passes.append(X86RandomProtectPass())
+
 from generator_llvm import X86LLVMGenerator
 from generator_const import X86ConstGenerator
 
 def get_generator(instruction_set: InstructionSet) -> Generator:
     if CONF.instruction_set == 'x86-64':
-        if CONF.generator == 'random':
+        if CONF.generator == 'asm.none':
             return X86RandomGenerator(instruction_set)
-        elif CONF.generator == 'llvm':
+        elif CONF.generator == 'asm.prot':
+            return X86RandomProtGenerator(instruction_set)
+        elif CONF.generator == 'llvm.ct':
             return X86LLVMGenerator(instruction_set, protcc='ct')
-        elif CONF.generator == 'llvm-unmod':
+        elif CONF.generator == 'llvm.arch':
             return X86LLVMGenerator(instruction_set, protcc='sbox')
-        elif CONF.generator == 'llvm-cts':
+        elif CONF.generator == 'llvm.cts':
             return X86LLVMGenerator(instruction_set, protcc='cts')
         elif m := re.match(r"const:(.*)", CONF.generator):
             return X86ConstGenerator(instruction_set, m.group(1))

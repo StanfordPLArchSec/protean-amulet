@@ -15,7 +15,7 @@ class ConfCls:
     # Fuzzer
     no_priming = False  ## No need for priming for gem5!
     min_primer_size: int = 1  # deprecated? # better leave at 1; otherwise may fail to build primer
-    max_primer_size: int = 10  # deprecated?
+    max_primer_size: int = 1000  # deprecated?
     # ==============================================================================================
     # Generator
     instruction_set = "x86-64"
