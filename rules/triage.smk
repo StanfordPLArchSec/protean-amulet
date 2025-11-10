@@ -28,9 +28,19 @@ def get_ctrace_from_file(path):
 def get_htrace_from_file(path):
     return search_file_one(r"^htraces: (\[.*\])$", path).group(1)
 
-def get_inorder_gem5_debug_flags(w):
-    ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff
+def triage_flags_impl(w):
+    if x := config.get("triage_flags"):
+        return x
+    elif w.observer == "arch":
+        return "ExecAll,FmtTicksOff"
+    else:
+        return "ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff"
 
+def triage_flags(w):
+    return triage_flags_impl(w) + ",FmtTicksOff"
+
+timeout = 300
+    
 rule result_inorder_single:
     output:
         directory(result_path("inorder_{input}"))
@@ -41,15 +51,14 @@ rule result_inorder_single:
     wildcard_constraints:
         input = r"(primer|reference)"
     params:
-        gem5_debug_flags = lambda w: \
-            "ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff" + \
-            ",ExecAll" if w.observer == "arch" else "",
+        gem5_debug_flags = triage_flags,
+        timeout = timeout,
     shell:
         "rm -rf {output} && "
         "mkdir -p {output} && "
         "GEM5_DEBUG_FLAGS={params.gem5_debug_flags} "
         "GEM5_DEBUG_FILE=$(realpath {output}/dbgout.txt) "
-        "timeout 30 ./src/cli.py fuzz --generator={wildcards.generator} "
+        "timeout {params.timeout} ./src/cli.py fuzz --generator={wildcards.generator} "
         " --cpu-type=X86TimingSimpleCPU -s base.json --ruby "
         "--protean=None --ipc-show-output --gem5-path=gem5/protean --gem5-binary=gem5/protean/build/X86/gem5.opt "
         "-i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} -t {input.asm} --result-dir={output}/results -p protean-check-{wildcards.input} "
@@ -128,21 +137,11 @@ def list_results(wildcards):
         
 rule triage_all:
     output:
-        # PHONY
         "{defense}-{observer}-{generator}/triage"
     input:
         lambda w: [os.path.join(d, "triage.json") for d in list_results(w)]
-
-def triage_ooo_flags_impl(w):
-    if x := config.get("triage_ooo_flags"):
-        return x
-    elif w.observer == "arch":
-        return "ExecAll,FmtTicksOff"
-    else:
-        return "ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff"
-
-def triage_ooo_flags(w):
-    return triage_ooo_flags_impl(w) + ",FmtTicksOff"
+    shell:
+        "for x in {input}; do echo $x; clang-format $x; done > {output}"
         
 rule result_ooo_single:
     output:
@@ -156,13 +155,14 @@ rule result_ooo_single:
     params:
         gem5_dir = lambda w: get_defense(w).gem5_dir,
         script_opts = lambda w: get_defense(w).script_opts,
-        triage_ooo_flags = triage_ooo_flags,
+        triage_flags = triage_flags,
+        timeout = timeout,
     shell:
         "rm -rf {output} && "
         "mkdir -p {output} && "
-        "GEM5_DEBUG_FLAGS={params.triage_ooo_flags} "
+        "GEM5_DEBUG_FLAGS={params.triage_flags} "
         "GEM5_DEBUG_FILE=$(realpath {output}/dbgout.txt) "
-        "timeout 30 ./src/cli.py fuzz --generator={wildcards.generator} "
+        "timeout {params.timeout} ./src/cli.py fuzz --generator={wildcards.generator} "
         "    --cpu-type=X86O3CPU -s base.json --ruby "
         "    --gem5-script-opts='{params.script_opts}' "
         "    --ipc-show-output --gem5-path={params.gem5_dir} "
@@ -178,5 +178,11 @@ rule result_ooo_triage:
     input:
         lambda w: expand(result_path("ooo_{input}"), **w,
                                      input=["reference", "primer"])
-    shell:
-        "touch {output}"
+
+rule result_inorder_triage:
+    output:
+        result_path("inorder")
+    input:
+        lambda w: expand(result_path("inorder_{input}"), **w,
+                         input=["reference", "primer"])
+        
