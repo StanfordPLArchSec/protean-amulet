@@ -6,6 +6,8 @@ num_programs = int(config.get("programs", "200"))
 
 verbose = bool(int(config.get("verbose", "0")))
 
+retries = int(config.get("retries", "2"))
+
 class Defense:
     name = None
     gem5_dir = None
@@ -25,12 +27,12 @@ defenses = [
     Defense(
         name = "protean.track",
         gem5_dir = "gem5/protean",
-        script_opts = ["--mieros=Track", "--mieros-pred-mode=Predict", "--mieros-pred-size=1024", "--speculation-model=AtRet"],
+        script_opts = ["--protean=Track", "--protean-pred-mode=Predict", "--protean-pred-size=1024", "--speculation-model=AtRet"],
     ),
     Defense(
         name = "protean.delay",
         gem5_dir = "gem5/protean",
-        script_opts = ["--mieros=Delay", "--speculation-model=AtRet"],
+        script_opts = ["--protean=Delay", "--speculation-model=AtRet"],
     ),
     Defense(
         name = "stt.0",
@@ -80,8 +82,8 @@ rule run_amulet_instance:
         script_opts = lambda w: get_defense(w).script_opts,
         result_dir = lambda w: \
             expand("{defense}-{observer}-{generator}", **w),
-        verbose_args = ["--ipc-show-output"] if verbose else [],
-    retries: 1
+        verbose_args = ["--ipc-show-output", "--verbose"] if verbose else [],
+    retries: retries
     shell:
         "./src/cli.py fuzz --gen-seed=$RANDOM$RANDOM -s base.json "
         "--generator={wildcards.generator} --ruby --gem5-script-opts='{params.script_opts}' "

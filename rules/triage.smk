@@ -61,7 +61,8 @@ rule result_inorder_single:
         "timeout {params.timeout} ./src/cli.py fuzz --generator={wildcards.generator} "
         " --cpu-type=X86TimingSimpleCPU -s base.json --ruby "
         "--protean=None --ipc-show-output --gem5-path=gem5/protean --gem5-binary=gem5/protean/build/X86/gem5.opt "
-        "-i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} -t {input.asm} --result-dir={output}/results -p protean-check-{wildcards.input} "
+        "-i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} -t {input.asm} --result-dir={output}/results "
+        "-p protean-check-inorder-{wildcards.input} "
         ">{output}/stdout.txt 2>{output}/stderr.txt "
 
 def do_triage_str(input):
@@ -169,7 +170,7 @@ rule result_ooo_single:
         "    --gem5-binary={params.gem5_dir}/build/X86/gem5.opt "
         "    -i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} "
         "    -t {input.asm} --result-dir={output}/results "
-        "    -p protean-check-{wildcards.input} "
+        "    -p protean-check-ooo-{wildcards.input} "
         "    >{output}/stdout.txt 2>{output}/stderr.txt "
         
 rule result_ooo_triage:
