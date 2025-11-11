@@ -4,7 +4,8 @@ import json
 import glob
 
 def result_path(suffix):
-    return os.path.join("{defense}-{observer}-{generator}/results/{result}", suffix)
+    return os.path.join("{defense}-{observer}-{generator}-{attacker}",
+                        "results", "{result}", suffix)
 
 def search_file(pattern, path):
     matches = []

@@ -73,22 +73,49 @@ def get_defense(w) -> Defense:
             return defense
     assert False, f"No defense '{w.defense}' found"
 
+def get_observer(w) -> str:
+    s = w.observer
+    if s == "ct":
+        s = "ctx"
+    return s
+    
+def get_attacker(w) -> str:
+    d = {
+        "cache": ["data_cache", "dtlb"],
+        "commit": ["commit"],
+    }
+    return str(d[w.attacker])
+
+rule gen_amulet_config:
+    output: "{defense}-{observer}-{generator}-{attacker}/configuration.yaml"
+    input: "config-template.yaml"
+    params:
+        observer = get_observer,
+        attacker = get_attacker,
+    shell:
+        "ARCH_OBS='{params.observer}' "
+        "UARCH_OBS='{params.attacker}' "
+        "envsubst <{input} >{output}"
+
 rule run_amulet_instance:
-    output: "{defense}-{observer}-{generator}/log-{idx}.txt"
+    input:
+        config = "{defense}-{observer}-{generator}-{attacker}/configuration.yaml"
+    output: "{defense}-{observer}-{generator}-{attacker}/log-{idx}.txt"
     wildcard_constraints:
         idx = r"[0-9]+"
     params:
         gem5_dir = lambda w: get_defense(w).gem5_dir,
         script_opts = lambda w: get_defense(w).script_opts,
         result_dir = lambda w: \
-            expand("{defense}-{observer}-{generator}", **w),
+            expand("{defense}-{observer}-{generator}-{attacker}", **w),
         verbose_args = ["--ipc-show-output", "--verbose"] if verbose else [],
     retries: retries
     shell:
         "./src/cli.py fuzz --gen-seed=$RANDOM$RANDOM -s base.json "
-        "--generator={wildcards.generator} --ruby --gem5-script-opts='{params.script_opts}' "
+        "--generator={wildcards.generator} --ruby "
+        "--gem5-script-opts='{params.script_opts}' "
         f"-i {num_inputs} -n {num_programs} "
-        "-c cache_and_tlb_{wildcards.observer}.yaml "
+        "-c {input.config} "
         "--result-dir={params.result_dir}/ "
         "-p {params.result_dir}-{wildcards.idx} "
         "--gem5-path={params.gem5_dir} --gem5-binary={params.gem5_dir}/build/X86/gem5.opt "
@@ -97,16 +124,16 @@ rule run_amulet_instance:
         "! grep '^Buggy test' {output}"
 
 rule run_experiment_i:
-    output: "{defense}-{observer}-{generator}/all.{i}"
+    output: "{defense}-{observer}-{generator}-{attacker}/all.{i}"
     input:
-        lambda w: expand("{defense}-{observer}-{generator}/log-{idx}.txt", **w, idx=range(0, int(w.i)))
+        lambda w: expand("{defense}-{observer}-{generator}-{attacker}/log-{idx}.txt", **w, idx=range(0, int(w.i)))
     shell:
         "touch {output}"
         
 rule run_experiment:
-    output: "{defense}-{observer}-{generator}/all"
+    output: "{defense}-{observer}-{generator}-{attacker}/all"
     input:
-        lambda w: expand("{defense}-{observer}-{generator}/log-{idx}.txt", **w, idx=range(0, num_instances))
+        lambda w: expand("{defense}-{observer}-{generator}-{attacker}/log-{idx}.txt", **w, idx=range(0, num_instances))
     shell:
         "touch {output}"
 
