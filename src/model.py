@@ -32,6 +32,8 @@ import json
 import capstone
 import collections
 
+expose_div = False
+
 FLAGS_CF = 0b000000000001
 FLAGS_PF = 0b000000000100
 FLAGS_AF = 0b000000010000
@@ -51,6 +53,10 @@ class X86UnicornTracer(ABC):
     def __init__(self):
         super().__init__()
         self.trace = []
+
+        # Protean extensions.
+        self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+        self.cs.detail = True
 
     def reset_trace(self, emulator) -> None:
         self.trace = []
@@ -105,7 +111,45 @@ class X86UnicornTracer(ABC):
             self.execution_trace.append(TracedInstruction(normalized_address, []))
             self.instruction_id = len(self.execution_trace) - 1
 
+    def disasm_instruction(self, model):
+        address = model.emulator.reg_read(capstone.x86_const.X86_REG_RIP)
+        code = model.emulator.mem_read(address, 16)
+        return next(iter(self.cs.disasm(code, address)))
 
+    def cs_to_uc_regname(self, cs_reg):
+        if cs_reg == "rflags":
+            return "eflags"
+        # elif cs_reg.startswith("e"):
+        #     return "r" + cs_reg.removeprefix("e")
+        else:
+            return cs_reg
+        
+    def read_cs_reg(self, cs_reg, model) -> int:
+        reg = self.cs.reg_name(cs_reg)
+        if reg in ["cs", "ds", "ss", "fs", "gs", "es"]:
+            return 0
+        uc_regname = self.cs_to_uc_regname(reg)
+        uc_reg = eval(f"unicorn.x86_const.UC_X86_REG_{uc_regname.upper()}")
+        return model.emulator.reg_read(uc_reg)
+
+    def expose_reg(self, cs_reg, model):
+        x = self.read_cs_reg(cs_reg, model)
+        self.trace.append(x)
+        model.taint_tracker.taint_reg(self.cs.reg_name(cs_reg).upper())
+
+    def expose_mem(self, address, size, model):
+        val = int.from_bytes(model.emulator.mem_read(address, size),
+                             byteorder="little")
+        self.trace.append(val)
+        model.taint_tracker.taint_memory_load()
+
+    def regs_read(self, insn):
+        return insn.regs_access()[0]
+
+    def regs_write(self, insn):
+        return insn.regs_access()[1]
+
+        
 class X86UnicornModel(Model):
     """
     Base class for all Unicorn-based models.
@@ -228,6 +272,16 @@ class X86UnicornModel(Model):
                 if not self.in_speculation:
                     self.print_state()
                     LOGGER.waring("model", "[X86UnicornModel:trace_test_case] %s" % e)
+                    cs = capstone.Cs(capstone.CS_ARCH_X86,
+                                     capstone.CS_MODE_64)
+                    pc = self.emulator.reg_read(UC_X86_REG_RIP)
+                    code_begin = pc & ~0xFFF
+                    code_end = (pc | 0xFFF) + 1
+                    code = self.emulator.mem_read(code_begin, code_end - code_begin)
+                    for insn in cs.disasm(code, code_begin):
+                        marker = "*" if insn.address == pc else " "
+                        print(f"{marker} {insn.mnemonic} {insn.op_str}", file=sys.stderr)
+                    exit(1)
 
             # if we use one of the SPEC contracts, we might have some residual simulations
             # that did not reach the spec. window by the end of simulation. Those need
@@ -727,10 +781,10 @@ class MemoryTracer(X86UnicornTracer):
 
 
 class CTTracer(PCTracer):
-
     def observe_mem_access(self, access, address, size, value, model):
         self.add_mem_address_to_trace(address, model)
         super(CTTracer, self).observe_mem_access(access, address, size, value, model)
+
 
 class CTNonSpecStoreTracer(PCTracer):
     def observe_mem_access(self, access, address, size, value, model):
@@ -745,7 +799,7 @@ class CTRTracer(CTTracer):
         self.trace = [
             emulator.reg_read(UC_X86_REG_RAX),
             emulator.reg_read(UC_X86_REG_RBX),
-            emulator.reg_read(UC_X86_REG_RCX),
+            emulator.reg_read(UC_X86_REG_RCX), 
             emulator.reg_read(UC_X86_REG_RDX),
             emulator.reg_read(UC_X86_REG_RSI),
             emulator.reg_read(UC_X86_REG_RDI),
@@ -754,11 +808,6 @@ class CTRTracer(CTTracer):
         self.execution_trace = []
 
 class CTXTracer(CTTracer):
-    def __init__(self):
-        super().__init__()
-        self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
-        self.cs.detail = True
-
     def reset_trace(self, emulator):
         self.trace = [
             # emulator.reg_read(UC_X86_REG_RBX),
@@ -767,31 +816,37 @@ class CTXTracer(CTTracer):
         ]
         self.execution_trace = []
 
-    def get_regval(self, cs_reg, model) -> int:
-        reg = self.cs.reg_name(cs_reg)
-        reg = eval(f"unicorn.x86_const.UC_X86_REG_{reg.upper()}")
-        reg = model.emulator.reg_read(reg)
-        return reg
-        
     def observe_instruction(self, address: int, size: int, model):
-        super(CTXTracer, self).observe_instruction(address, size, model)
-        code = model.emulator.mem_read(address, size)
-        insn, = self.cs.disasm(code, address)
+        super().observe_instruction(address, size, model)
+        insn = self.disasm_instruction(model)
+
+        # MEM: Expose base and index address registers.
         for op in insn.operands:
             if op.type == capstone.CS_OP_MEM and \
                op.access & (capstone.CS_AC_READ | capstone.CS_AC_WRITE):
                 mem = op.value.mem
                 for reg in [mem.base, mem.index]:
                     if reg:
-                        reg = self.get_regval(reg, model)
-                        self.add_pc_to_trace(reg, model)
+                        self.expose_reg(reg, model)
+
+        # DIV: Expose all register inputs.
+        if insn.opcode == capstone.x86_const.X86_INS_DIV and expose_div:
+            for reg in self.regs_read(insn):
+                self.expose_reg(reg, model)
+
+    def observe_mem_access(self, access, address, size, value, model):
+        super().observe_mem_access(access, address, size, value, model)
+        insn = self.disasm_instruction(model)
+
+        # DIV: Expose memory inputs.
+        if insn.opcode == capstone.x86_const.X86_INS_DIV and expose_div:
+            assert access == unicorn.x86_const.UC_MEM_READ
+            self.expose_mem(address, size, model)
 
 
 class ProtTracer(CTRTracer):
     def __init__(self):
         super().__init__()
-        self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
-        self.cs.detail = True
 
     def check_protected_pc(self, pc, model) -> bool:
         code = model.emulator.mem_read(pc, 1)
@@ -803,13 +858,6 @@ class ProtTracer(CTRTracer):
         else:
             return cs_reg
         
-
-    def get_regval(self, cs_reg, model) -> int:
-        reg = self.cs.reg_name(cs_reg)
-        reg = eval(f"unicorn.x86_const.UC_X86_REG_{self.cs_to_uc_regname(reg).upper()}")
-        reg = model.emulator.reg_read(reg)
-        return reg
-
     def observe_mem_access(self, access, address, size, value, model):
         super().observe_mem_access(access, address, size, value, model)
         if access != uni.UC_MEM_READ:
@@ -818,14 +866,12 @@ class ProtTracer(CTRTracer):
         assert pc == self.last_pc
         if self.check_protected_pc(pc, model):
             return
-        # Expose memory data.
-        val = int.from_bytes(model.emulator.mem_read(address, size), byteorder='little')
-        self.trace.append(val)
+        # Expose memory.
+        self.expose_mem(address, size, model)
 
     def observe_instruction(self, address: int, size: int, model):
         super().observe_instruction(address, size, model)
-        code = model.emulator.mem_read(address, size)
-        insn, = self.cs.disasm(code, address)
+        insn = self.disasm_instruction(address, size, model)
         self.last_pc = address
 
         # Expose all address registers.
@@ -835,7 +881,7 @@ class ProtTracer(CTRTracer):
                 mem = op.value.mem
                 for reg in [mem.base, mem.index]:
                     if reg:
-                        self.add_pc_to_trace(self.get_regval(reg, model), model)
+                        self.expose_reg(reg, model)
 
         # Is the instruction unprotected?
         if not self.check_protected_pc(address, model):
@@ -843,13 +889,11 @@ class ProtTracer(CTRTracer):
 
         # Expose ouptut registers, since the instruction is unprotected.
         for reg in self.regs_write(insn):
-            self.add_pc_to_trace(self.get_regval(reg, model), model)
+            self.expose_reg(reg, model)
 
 class CTSTracer(CTXTracer):
     def __init__(self):
         super().__init__()
-        self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
-        self.cs.detail = True
         self.clear_analysis()
 
     def clear_analysis(self):
@@ -889,12 +933,6 @@ class CTSTracer(CTXTracer):
     def merge(self, pred):
         for succ in self.succs[pred]:
             self.unprots_post[pred].update(self.unprots_pre[succ])
-
-    def regs_read(self, insn):
-        return insn.regs_access()[0]
-
-    def regs_write(self, insn):
-        return insn.regs_access()[1]
 
     def subregs_str(self, reg):
         # subreg maps
@@ -1038,22 +1076,6 @@ class CTSTracer(CTXTracer):
         self.dataflow_analysis()
         if CONF.verbose:
             self.print_analysis()
-
-    def cs_to_uc_regname(self, cs_reg):
-        if cs_reg == "rflags":
-            return "eflags"
-        # elif cs_reg.startswith("e"):
-        #     return "r" + cs_reg.removeprefix("e")
-        else:
-            return cs_reg
-        
-    def get_regval(self, cs_reg, model) -> int:
-        reg = self.cs.reg_name(cs_reg)
-        if reg in ["cs", "ds", "ss", "fs", "gs", "es"]:
-            return 0
-        reg = eval(f"unicorn.x86_const.UC_X86_REG_{self.cs_to_uc_regname(reg).upper()}")
-        reg = model.emulator.reg_read(reg)
-        return reg
         
     def observe_instruction(self, address: int, size: int, model):
         if not self.analyzed:
@@ -1065,32 +1087,13 @@ class CTSTracer(CTXTracer):
         # Expose all unprotected registers.
         if insn := self.lookup_insn(address):
             for reg in self.unprots_pre[insn]:
-                x = self.get_regval(reg, model)
-                if False:
-                    print(f"TRACE: pc={address:#x} reg={self.cs.reg_name(reg)} "
-                          f"val={x:#x}", file=sys.stderr)
-                self.trace.append(x)
-                model.taint_tracker.taint_reg(self.cs.reg_name(reg).upper())
-        
+                self.expose_reg(reg, model)
+
                         
 class ArchTracer(CTRTracer):
-    def __init__(self):
-        super().__init__()
-        self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
-        self.cs.detail = True
-
-    def observe_instruction(self, address: int, size: int, model):
-        super().observe_instruction(address, size, model)
-        insn, = list(self.cs.disasm(model.emulator.mem_read(address, size), address, 1))
-        # print(f"ARCH insn {insn.mnemonic} {insn.op_str}")
-
     def observe_mem_access(self, access, address, size, value, model: X86UnicornModel):
         if access == uni.UC_MEM_READ:
-            val = int.from_bytes(model.emulator.mem_read(address, size), byteorder='little')
-            self.trace.append(val)
-            model.taint_tracker.taint_memory_load()
-            insn, = list(self.cs.disasm(model.emulator.mem_read(model.emulator.reg_read(UC_X86_REG_RIP), 16), 0, 1))
-            # print(f"ARCH pc={model.emulator.reg_read(UC_X86_REG_RIP):#x} {address=:#x} {val=:#x} {size=} disasm={insn.mnemonic} {insn.op_str}")
+            self.expose_mem(address, size, model)
         self.add_mem_address_to_trace(address, model)
         super(ArchTracer, self).observe_mem_access(access, address, size, value, model)
 
