@@ -58,6 +58,12 @@ class X86UnicornTracer(ABC):
         # Protean extensions.
         self.cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
         self.cs.detail = True
+        self.regs_access_cache = CachingDict(
+            lambda insn: insn.regs_access(),
+            key_transform = lambda insn: insn.address,
+        )
+            
+            
 
     def reset_trace(self, emulator) -> None:
         self.trace = []
@@ -144,11 +150,14 @@ class X86UnicornTracer(ABC):
         self.trace.append(val)
         model.taint_tracker.taint_memory_load()
 
+    def regs_access(self, insn):
+        return self.regs_access_cache[insn]
+        
     def regs_read(self, insn):
-        return insn.regs_access()[0]
+        return self.regs_access(insn)[0]
 
     def regs_write(self, insn):
-        return insn.regs_access()[1]
+        return self.regs_access(insn)[1]
 
         
 class X86UnicornModel(Model):
