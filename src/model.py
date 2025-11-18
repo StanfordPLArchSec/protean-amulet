@@ -31,6 +31,7 @@ import xxhash
 import json
 import capstone
 import collections
+from util import CachingDict
 
 expose_div = False
 
@@ -895,6 +896,7 @@ class CTSTracer(CTXTracer):
     def __init__(self):
         super().__init__()
         self.clear_analysis()
+        self.expand_subregs_cache = CachingDict(self.expand_subregs_impl)
 
     def clear_analysis(self):
         self.analyzed = False
@@ -997,12 +999,17 @@ class CTSTracer(CTXTracer):
                     ops.append(x)
         return ops
 
-    def expand_subregs(self, l):
+    def expand_subregs_impl(self, l):
         out = []
         for x in l:
             out.extend(self.subregs(x))
         return out
 
+    # For performance, cache responses from
+    # expand_subregs_impl.
+    def expand_subregs(self, l):
+        return self.expand_subregs_cache[tuple(l)]
+            
     def transfer(self, insn):
         v = set(self.unprots_post[insn])
 
