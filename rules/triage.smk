@@ -134,12 +134,12 @@ rule result_triage:
 
 def list_results(wildcards):
     results_dir, = \
-        expand("{defense}-{observer}-{generator}/results", **wildcards)
-    return glob.glob(os.path.join(results_dir, "*hrs-*mins-*secs"))
-        
+        expand("{defense}-{observer}-{generator}-{attacker}/results", **wildcards)
+    return glob.glob(os.path.join(results_dir, "*hrs-*mins-*secs*"))
+
 rule triage_all:
     output:
-        "{defense}-{observer}-{generator}/triage"
+        "{defense}-{observer}-{generator}-{attacker}/triage"
     input:
         lambda w: [os.path.join(d, "triage.json") for d in list_results(w)]
     shell:
