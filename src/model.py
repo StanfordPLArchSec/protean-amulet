@@ -60,7 +60,7 @@ class X86UnicornTracer(ABC):
         self.cs.detail = True
         self.regs_access_cache = CachingDict(
             lambda insn: insn.regs_access(),
-            key_transform = lambda insn: insn.address,
+            key_transform = lambda insn: bytes(insn.bytes),
         )
             
             
@@ -881,7 +881,7 @@ class ProtTracer(CTRTracer):
 
     def observe_instruction(self, address: int, size: int, model):
         super().observe_instruction(address, size, model)
-        insn = self.disasm_instruction(address, size, model)
+        insn = self.disasm_instruction(model)
         self.last_pc = address
 
         # Expose all address registers.
@@ -898,6 +898,7 @@ class ProtTracer(CTRTracer):
             return
 
         # Expose ouptut registers, since the instruction is unprotected.
+        # FIXME: Need to expose AFTER the instruction executes, dummy!
         for reg in self.regs_write(insn):
             self.expose_reg(reg, model)
 
@@ -906,6 +907,10 @@ class CTSTracer(CTXTracer):
         super().__init__()
         self.clear_analysis()
         self.expand_subregs_cache = CachingDict(self.expand_subregs_impl)
+        self.unprot_operands_cache = CachingDict(
+            self.get_unprot_operands_impl,
+            key_transform=lambda insn: bytes(insn.bytes),
+        )
 
     def clear_analysis(self):
         self.analyzed = False
@@ -993,7 +998,7 @@ class CTSTracer(CTXTracer):
             return eval(f"capstone.x86_const.X86_REG_{x.upper()}")
         return list(map(f, subregs_str))
 
-    def get_unprot_operands(self, insn):
+    def get_unprot_operands_impl(self, insn):
         ops = []
         # If it's a branch, then add all inputs.
         if capstone.CS_GRP_JUMP in insn.groups:
@@ -1007,6 +1012,9 @@ class CTSTracer(CTXTracer):
                 if x := op.mem.index:
                     ops.append(x)
         return ops
+
+    def get_unprot_operands(self, insn):
+        return self.unprot_operands_cache[insn]
 
     def expand_subregs_impl(self, l):
         out = []
