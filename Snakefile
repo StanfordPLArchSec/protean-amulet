@@ -1,12 +1,19 @@
 num_instances = 100
 # Changed from 140 to 5, since the 'commit' microarchitectural observer
 # finds many more violations.
-num_inputs = int(config.get("inputs", "5"))
 num_programs = int(config.get("programs", "200"))
 
 verbose = bool(int(config.get("verbose", "0")))
 
 retries = int(config.get("retries", "2"))
+
+re_dotted_word = r"(\w|\.)+"
+
+wildcard_constraints:
+    defense = re_dotted_word,
+    observer = re_dotted_word,
+    generator = re_dotted_word,
+    attacker = re_dotted_word,
 
 class Defense:
     name = None
@@ -18,6 +25,21 @@ class Defense:
         self.gem5_dir = gem5_dir
         self.script_opts = script_opts
 
+    def clone(self):
+        return Defense(
+            name = self.name,
+            gem5_dir = self.gem5_dir,
+            script_opts = list(self.script_opts),
+        )
+
+    def splat(self, opts):
+        defenses = []
+        for i in range(len(opts) + 1):
+            defenses.append(self.clone())
+            defenses[-1].name += f".{i}"
+            defenses[-1].script_opts.extend(opts[:i])
+        return defenses
+
 defenses = [
     Defense(
         name = "none",
@@ -25,46 +47,30 @@ defenses = [
         script_opts = [],
     ),
     Defense(
-        name = "protean.track",
+        name = "prottrack",
         gem5_dir = "gem5/protean",
         script_opts = ["--protean=Track", "--protean-pred-mode=Predict", "--protean-pred-size=1024", "--speculation-model=AtRet"],
     ),
     Defense(
-        name = "protean.delay",
+        name = "protdelay",
         gem5_dir = "gem5/protean",
-        script_opts = ["--protean=Delay", "--speculation-model=AtRet"],
+        script_opts = ["--protean=Delay", "--speculation-model=AtRet", "--protean-delay-flags-opt"],
     ),
-    Defense(
-        name = "stt.0",
+    *Defense(
+        name = "stt",
         gem5_dir = "gem5/stt",
         script_opts = ["--stt", "--implicit-channel=Lazy", "--speculation-model=AtRet"],
-    ),
-    Defense(
-        name = "stt.1",
-        gem5_dir = "gem5/stt",
-        script_opts = ["--stt", "--implicit-channel=Lazy", "--speculation-model=AtRet", "--stt-bugfix-store"],
-    ),
-    Defense(
-        name = "stt.2",
-        gem5_dir = "gem5/stt",
-        script_opts = ["--stt", "--implicit-channel=Lazy", "--speculation-model=AtRet", "--stt-bugfix-store", "--stt-bugfix-pending"],
-    ),
-    Defense(
-        name = "spt.0",
+    ).splat(["--stt-bugfix-store", "--stt-bugfix-pending", "--more-transmit-insts=3"]),
+    *Defense(
+        name = "spt",
         gem5_dir = "gem5/spt",
         script_opts = ["--spt", "--fwdUntaint=1", "--bwdUntaint=1", "--enableShadowL1=1", "--speculation-model=AtRet"],
-    ),
-    Defense(
-        name = "spt.1",
+    ).splat(["--spt-bugfix-pending", "--moreTransmitInsts=3", "--spt-bugfix-rename", "--spt-bugfix-datasize"]),
+    *Defense(
+        name = "sptsb",
         gem5_dir = "gem5/spt",
-        script_opts = ["--spt", "--fwdUntaint=1", "--bwdUntaint=1", "--enableShadowL1=1", "--speculation-model=AtRet",
-                       "--spt-bugfix-pending"],
-    ),
-    Defense(
-        name = "spt.sb",
-        gem5_dir = "gem5/spt",
-        script_opts = ["--spt", "--disableUntaint=1", "--speculation-model=AtRet", "--spt-bugfix-pending"],
-    ),
+        script_opts = ["--spt", "--disableUntaint=1", "--speculation-model=AtRet"],
+    ).splat(["--spt-bugfix-pending", "--moreTransmitInsts=3"]),
 ]
 
 def get_defense(w) -> Defense:
@@ -82,9 +88,16 @@ def get_observer(w) -> str:
 def get_attacker(w) -> str:
     d = {
         "cache": ["data_cache", "dtlb"],
-        "commit": ["commit"],
+        "commit": ["data_cache", "dtlb", "commit"],
     }
     return str(d[w.attacker])
+
+def get_inputs(w) -> int:
+    d = {
+        "cache": 140,
+        "commit": 5,
+    }
+    return d[w.attacker]
 
 rule gen_amulet_config:
     output: "{defense}-{observer}-{generator}-{attacker}/configuration.yaml"
@@ -109,12 +122,13 @@ rule run_amulet_instance:
         result_dir = lambda w: \
             expand("{defense}-{observer}-{generator}-{attacker}", **w),
         verbose_args = ["--ipc-show-output", "--verbose"] if verbose else [],
+        num_inputs = get_inputs,
     retries: retries
     shell:
         "./src/cli.py fuzz --gen-seed=$RANDOM$RANDOM -s base.json "
         "--generator={wildcards.generator} --ruby "
         "--gem5-script-opts='{params.script_opts}' "
-        f"-i {num_inputs} -n {num_programs} "
+        "-i {params.num_inputs} -n {num_programs} "
         "-c {input.config} "
         "--result-dir={params.result_dir}/ "
         "-p {params.result_dir}-{wildcards.idx} "
