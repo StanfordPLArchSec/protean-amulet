@@ -857,6 +857,7 @@ class CTXTracer(CTTracer):
 class ProtTracer(CTRTracer):
     def __init__(self):
         super().__init__()
+        self.unprot_regs = []
 
     def check_protected_pc(self, pc, model) -> bool:
         code = model.emulator.mem_read(pc, 1)
@@ -884,6 +885,11 @@ class ProtTracer(CTRTracer):
         insn = self.disasm_instruction(model)
         self.last_pc = address
 
+        # Expose any outputs from the *last* instruction (HACK!)
+        for reg in self.unprot_regs:
+            self.expose_reg(reg, model)
+        self.unprot_regs = []
+
         # Expose all address registers.
         for op in insn.operands:
             if op.type == capstone.CS_OP_MEM and \
@@ -898,9 +904,9 @@ class ProtTracer(CTRTracer):
             return
 
         # Expose ouptut registers, since the instruction is unprotected.
-        # FIXME: Need to expose AFTER the instruction executes, dummy!
-        for reg in self.regs_write(insn):
-            self.expose_reg(reg, model)
+        # But do it before the next instruction executes, since we
+        # haven't computed the actual data yet.
+        self.unprot_regs = self.regs_write(insn)
 
 class CTSTracer(CTXTracer):
     def __init__(self):

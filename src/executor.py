@@ -745,9 +745,9 @@ class X86Gem5(Executor):
                 if CONF.profile: start = time.time()
                 try:
                     self.ipc_trace_test_case(input_, id_)
-                    gem5_output = self.ipc.get_gem5_output()
                 except Gem5Crash:
                     bug = True
+                gem5_output = self.ipc.get_gem5_output()
                 if CONF.profile: STAT.gem5_time += time.time() - start
             else:
                 revizor_asm_path = "{}/{}/test_case_rvzr_{}_{}.asm".format(CONF.debug_dir, CONF.test_case, id_, input_)

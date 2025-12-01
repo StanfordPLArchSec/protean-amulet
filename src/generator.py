@@ -1303,6 +1303,10 @@ def get_generator(instruction_set: InstructionSet) -> Generator:
             return X86LLVMGenerator(instruction_set, protcc='sbox')
         elif CONF.generator == 'llvm.cts':
             return X86LLVMGenerator(instruction_set, protcc='cts')
+        elif CONF.generator == 'llvm.unr':
+            return X86LLVMGenerator(instruction_set, protcc='nct')
+        elif CONF.generator == 'llvm.prot':
+            return X86LLVMGenerator(instruction_set, protcc='rand')
         elif m := re.match(r"const:(.*)", CONF.generator):
             return X86ConstGenerator(instruction_set, m.group(1))
 
