@@ -4,7 +4,6 @@ build/
 .lsync*
 venv/
 **/__pycache__/
-CMakeLists.txt
 
 # Revizor
 tmp.pdf
