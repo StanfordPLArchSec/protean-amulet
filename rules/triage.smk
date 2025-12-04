@@ -32,13 +32,35 @@ def get_htrace_from_file(path):
 def triage_flags_impl(w):
     if x := config.get("triage_flags"):
         return x
-    elif w.observer == "arch":
-        return "ExecAll,FmtTicksOff"
-    else:
-        return "ExecEnable,ExecUser,ExecMacro,ExecMicro,FmtTicksOff"
+    return "ExecAll,FmtTicksOff"
 
 def triage_flags(w):
     return triage_flags_impl(w) + ",FmtTicksOff"
+
+def compare_dbgout_lines(l1, l2, observer):
+    if observer == "arch":
+        return l1 == l2
+    # Otherwise, assume CT and just look at address and PC.
+
+    def check_pattern(pattern):
+        m1 = re.search(pattern, l1)
+        m2 = re.search(pattern, l2)
+        if m1 and m2:
+            return m1.group(1) == m2.group(1)
+        return True
+
+    # Check PC.
+    # system.cpu: A0 T0 : 0x4021e1 @code+481. 0 :
+    if not check_pattern(r"^system\.cpu: A0 T0 : ([^:]+) :"):
+        return False
+
+    # Check address.
+    if not check_pattern(r"\sA=(\w+)\s"):
+        return False
+
+    return True
+
+        
 
 timeout = 300
     
@@ -66,7 +88,7 @@ rule result_inorder_single:
         "-p protean-check-inorder-{wildcards.input} "
         ">{output}/stdout.txt 2>{output}/stderr.txt "
 
-def do_triage_str(input):
+def do_triage_str(input, wildcards):
         inorder_input_stdout = \
             list(map(lambda d: os.path.join(d, "stdout.txt"), input.inorder))
         inorder_input_dbgout = \
@@ -91,7 +113,7 @@ def do_triage_str(input):
         with open(ooo_input_dbgout[0]) as f1, \
              open(ooo_input_dbgout[1]) as f2:
             for l1, l2 in zip(f1, f2):
-                if l1 != l2:
+                if not compare_dbgout_lines(l1, l2, wildcards.observer):
                     return {
                         "result": "false-positive",
                         "reason": "mismatching-dbgouts",
@@ -112,8 +134,8 @@ def do_triage_str(input):
             "reason": "none",
         }
 
-def do_triage(input, output):
-    result = do_triage_str(input)
+def do_triage(input, output, wildcards):
+    result = do_triage_str(input, wildcards)
     with open(output, "wt") as f:
         json.dump(result, f)
         f.write("\n")
@@ -130,7 +152,7 @@ rule result_triage:
                    input=["reference", "primer"]),
     run:
         output, = output
-        do_triage(input, output)
+        do_triage(input, output, wildcards)
 
 def list_results(wildcards):
     results_dir, = \
@@ -142,8 +164,13 @@ rule triage_all:
         "{defense}-{observer}-{generator}-{attacker}/triage"
     input:
         lambda w: [os.path.join(d, "triage.json") for d in list_results(w)]
-    shell:
-        "for x in {input}; do echo $x; clang-format $x; done > {output}"
+    run:
+        d = {}
+        for path in input:
+            with open(path) as f_in:
+                d[path] = json.load(f_in)
+        with open(output[0], "wt") as f_out:
+            json.dump(d, f_out, indent = 4)
         
 rule result_ooo_single:
     output:
