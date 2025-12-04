@@ -46,3 +46,5 @@ dbg/*
 log-*.txt
 debug-*/
 /protean-*/
+
+/base.json
