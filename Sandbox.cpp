@@ -3,6 +3,7 @@
 #include <llvm/IR/InstIterator.h>
 #include <llvm/ADT/SCCIterator.h>
 #include <llvm/IR/IntrinsicsX86.h>
+#include <llvm/Transforms/Utils/BasicBlockUtils.h>
 
 using namespace llvm;
 
@@ -105,18 +106,52 @@ private:
         maskAccess(I, SandboxBase, SandboxMask);
   }
 
-  void maskDivision(Function &F) {
-    for (Instruction &I : llvm::instructions(F)) {
-      if (I.isIntDivRem()) {
-        auto *BinOp = cast<BinaryOperator>(&I);
-        Use &DenomUse = BinOp->getOperandUse(1);
-        Value *Denom = DenomUse.get();
-        IRBuilder<> IRB(&I);
-        Value *IsZero = IRB.CreateICmp(CmpInst::ICMP_EQ, Denom, Constant::getNullValue(Denom->getType()));
-        Denom = IRB.CreateSelect(IsZero, Constant::getAllOnesValue(Denom->getType()), Denom);
-        DenomUse.set(Denom);
-      }
-    }
+  void maskDiv(BinaryOperator *I) {
+    // Control-flow will look like this:
+    // if (divisor != 0) {
+    //   x = div();
+    // } else {
+    //   x = 0;
+    // }
+
+    // Create blocks.
+    BasicBlock *PreBB = I->getParent();
+    BasicBlock *DivBB = llvm::SplitBlock(PreBB, I);
+    BasicBlock *PostBB = llvm::SplitBlock(DivBB, I->getNextNode());
+
+    // Div operands.
+    Value *Denom = I->getOperand(1);
+
+    // Fixup PreBB.
+    assert(PreBB->back().isTerminator());
+    PreBB->back().eraseFromParent();
+    IRBuilder<> PreIRB(PreBB);
+    Value *DenomZero = PreIRB.CreateICmp(CmpInst::ICMP_EQ, Denom,
+                                         Constant::getNullValue(Denom->getType()));
+    PreIRB.CreateCondBr(DenomZero, /*true*/PostBB, /*false*/DivBB);
+
+    // Fixup PostBB.
+    IRBuilder<> PostIRB(PostBB, PostBB->begin());
+    PHINode *Phi = PostIRB.CreatePHI(I->getType(), 2);
+    Phi->addIncoming(Constant::getNullValue(I->getType()), PreBB);
+    Phi->addIncoming(I, DivBB);
+
+    // Update uses of result.
+    I->replaceUsesWithIf(Phi, [Phi] (Use &U) -> bool {
+      return U.getUser() != Phi;
+    });
+  }
+
+  void maskDivs(Function &F) {
+    // Collect DIV instructions.
+    SmallVector<Instruction *> Divs;
+    for (Instruction &I : llvm::instructions(F))
+      if (I.isIntDivRem())
+        Divs.push_back(&I);
+
+    // Sandbox each DIV.
+    for (Instruction *Div : Divs)
+      maskDiv(cast<BinaryOperator>(Div));
   }
   
   void runOnFunction(Function &F) {
@@ -134,7 +169,7 @@ private:
     maskAccesses(F, SandboxBase, SandboxMask);
 
     // Now, fix up any division.
-    maskDivision(F);
+    maskDivs(F);
 
     // Insert MFENCEs.
     auto make_mfence = [&] (Instruction &I) {

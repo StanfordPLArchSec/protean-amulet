@@ -60,17 +60,17 @@ defenses = [
         name = "stt",
         gem5_dir = "gem5/stt",
         script_opts = ["--stt", "--implicit-channel=Lazy", "--speculation-model=AtRet"],
-    ).splat(["--stt-bugfix-store", "--stt-bugfix-pending", "--more-transmit-insts=3"]),
+    ).splat(["--stt-bugfix-store", "--more-transmit-insts=3", "--stt-bugfix-pending"]),
     *Defense(
         name = "spt",
         gem5_dir = "gem5/spt",
         script_opts = ["--spt", "--fwdUntaint=1", "--bwdUntaint=1", "--enableShadowL1=1", "--speculation-model=AtRet"],
-    ).splat(["--spt-bugfix-pending", "--moreTransmitInsts=3", "--spt-bugfix-rename", "--spt-bugfix-datasize"]),
+    ).splat(["--moreTransmitInsts=3", "--spt-bugfix-pending", "--spt-bugfix-rename", "--spt-bugfix-datasize"]),
     *Defense(
         name = "sptsb",
         gem5_dir = "gem5/spt",
         script_opts = ["--spt", "--disableUntaint=1", "--speculation-model=AtRet"],
-    ).splat(["--spt-bugfix-pending", "--moreTransmitInsts=3"]),
+    ).splat(["--moreTransmitInsts=3", "--spt-bugfix-pending"]),
 ]
 
 def get_defense(w) -> Defense:
