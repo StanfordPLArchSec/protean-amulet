@@ -1,9 +1,10 @@
-protean.delay-cts-llvm.cts-commit/results/0hrs-08mins-52secs/triage.json
 {
-  "result": "false-positive",
-  "reason": "mismatching-dbgouts",
-  "culprit-lines": [
-    "system.cpu: 0x4021f3    :   MFENCE                   : \n",
-    "system.cpu: 0x402139    : mov\tr14, DS:[rdi + rax]   \n"
-  ]
+    "protdelay-cts-llvm.cts-commit/results/0hrs-08mins-52secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4021f3    :   MFENCE                   : \n",
+            "system.cpu: 0x402139    : mov\tr14, DS:[rdi + rax]   \n"
+        ]
+    }
 }
