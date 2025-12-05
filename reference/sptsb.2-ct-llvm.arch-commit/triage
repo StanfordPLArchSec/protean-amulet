@@ -1,0 +1,114 @@
+{
+    "sptsb.2-ct-llvm.arch-commit/results/1hrs-28mins-41secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x402116 @code+278. 3 :   DIV_R : div2   t1, rax, t1 : IntDiv :  D=0x0000000000000068  FetchSeq=36316  CPSeq=32485  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n",
+            "system.cpu: A0 T0 : 0x402116 @code+278. 8 :   DIV_R : divq   rax, rax  : IntAlu :  D=0x015526bcffffdd3b  FetchSeq=36224  CPSeq=32485  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-46mins-10secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021a9 @code+425.13 :   IDIV_R : div2   t4, t1, t4 : IntDiv :  D=0x00000000000ec1ac  FetchSeq=71186  CPSeq=65565  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n",
+            "system.cpu: A0 T0 : 0x4021a9 @code+425.18 :   IDIV_R : divq   t5, t5   : IntAlu :  D=0x00000000487fa048  FetchSeq=70954  CPSeq=65565  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/1hrs-08mins-40secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f4 @code+500    :   MFENCE                   : IntAlu :   FetchSeq=35787  CPSeq=32599  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x402152 @code+338    : cmp\tDS:[rdi + rax], 0x1   \n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-30mins-57secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x40215f @code+351    : lea\tr12, DS:[8*r15 + rsi] \n",
+            "system.cpu: A0 T0 : 0x4021f3 @code+499    :   MFENCE                   : IntAlu :   FetchSeq=13386  CPSeq=11231  flags=(IsWriteBarrier|IsReadBarrier)\n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/1hrs-02mins-17secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x402179 @code+377. 3 :   DIV_R : div2   t1, rax, t1 : IntDiv :  D=0x0000000000112198  FetchSeq=49122  CPSeq=43606  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n",
+            "system.cpu: A0 T0 : 0x402179 @code+377. 8 :   DIV_R : divq   rax, rax  : IntAlu :  D=0x000000002024e455  FetchSeq=49011  CPSeq=43606  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-50mins-23secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x40218f @code+399.13 :   IDIV_R : div2   t4d, t1d, t4d : IntDiv :  D=0x0000000000000030  FetchSeq=36082  CPSeq=32948  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n",
+            "system.cpu: A0 T0 : 0x40218f @code+399.18 :   IDIV_R : divq   t5d, t5d : IntAlu :  D=0x0000000000000001  FetchSeq=35847  CPSeq=32948  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-39mins-35secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x402102 @code+258. 8 :   DIV_R : divq   rax, rax  : IntAlu :  D=0x00000131f4fa7e03  FetchSeq=13450  CPSeq=11166  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n",
+            "system.cpu: A0 T0 : 0x402102 @code+258. 3 :   DIV_R : div2   t1, rax, t1 : IntDiv :  D=0x0000000000000668  FetchSeq=13256  CPSeq=11166  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-05mins-53secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4020c3 @code+195. 3 :   DIV_R : div2   t1, rax, t1 : IntDiv :  D=0x00000000001db24c  FetchSeq=47734  CPSeq=42924  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n",
+            "system.cpu: A0 T0 : 0x4020c3 @code+195. 8 :   DIV_R : divq   rax, rax  : IntAlu :  D=0x0000000065262365  FetchSeq=47609  CPSeq=42924  flags=(IsInteger|IsMicroop|IsDelayedCommit)\n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/1hrs-00mins-11secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f7 @code+503    :   MFENCE                   : IntAlu :   FetchSeq=13487  CPSeq=11325  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x4021cf @code+463    : cmp\tecx                   \n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-03mins-18secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021fd @code+509    :   MFENCE                   : IntAlu :   FetchSeq=36062  CPSeq=33110  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x4021ee @code+494    : mov\trcx, DS:[rax + rdi]   \n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-48mins-15secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f7 @code+503    :   MFENCE                   : IntAlu :   FetchSeq=35336  CPSeq=32656  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x40216a @code+362    : cmp\tecx                   \n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-29mins-22secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021fd @code+509    :   MFENCE                   : IntAlu :   FetchSeq=47324  CPSeq=43769  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x4021d7 @code+471    : lea\trcx, DS:[8*rdi + rcx] \n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/1hrs-30mins-04secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021fc @code+508    :   MFENCE                   : IntAlu :   FetchSeq=13493  CPSeq=11325  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x4021af @code+431    : cmp\tDS:[rdi + rsi], 0     \n"
+        ]
+    },
+    "sptsb.2-ct-llvm.arch-commit/results/0hrs-31mins-46secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f3 @code+499    :   MFENCE                   : IntAlu :   FetchSeq=24354  CPSeq=21655  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x40213f @code+319    : lea\trdx, DS:[rdi + r14]   \n"
+        ]
+    }
+}

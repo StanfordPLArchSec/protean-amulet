@@ -1,0 +1,270 @@
+{
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-15mins-18secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-34mins-48secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-15mins-53secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-13mins-41secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-41mins-25secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-47mins-52secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-18mins-39secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-43mins-35secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-05mins-21secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-12mins-47secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-33mins-09secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-52mins-09secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-12mins-39secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-35mins-38secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-08mins-30secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-00mins-04secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-16mins-04secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-21mins-19secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-00mins-08secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-42mins-12secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-00mins-18secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-08mins-13secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-10mins-40secs-017376us/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-13mins-04secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-15mins-54secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-00mins-36secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-49mins-45secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-09mins-46secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-52mins-09secs-249021us/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-41mins-40secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-08mins-29secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-46mins-11secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-28mins-38secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-10mins-40secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-18mins-08secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-49mins-35secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-15mins-17secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-44mins-18secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-22mins-38secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-26mins-47secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-04mins-14secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-24mins-10secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-28mins-31secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-13mins-17secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-41mins-26secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-14mins-40secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/1hrs-26mins-50secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-53mins-41secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-23mins-53secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-44mins-38secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-01mins-26secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-39mins-32secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-01mins-37secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x402132 @code+306. 0 :   MOV_M_R : st   ecx, DS:[rdi + r12] : MemWrite :  D=0x0000000000403001 A=0x403d80  FetchSeq=13064  CPSeq=11134  flags=(IsInteger|IsStore|IsMicroop|IsLastMicroop|IsFirstMicroop)\n",
+            "system.cpu: A0 T0 : 0x402132 @code+306. 0 :   MOV_M_R : st   ecx, DS:[rdi + r12] : MemWrite :  D=0x0000000000403001 A=0x403300  FetchSeq=13064  CPSeq=11134  flags=(IsInteger|IsStore|IsMicroop|IsLastMicroop|IsFirstMicroop)\n"
+        ]
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-22mins-17secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-08mins-47secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-53mins-58secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-15mins-23secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-39mins-23secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-21mins-31secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-30mins-55secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-02mins-59secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-30mins-05secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-43mins-19secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-08mins-28secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-30mins-52secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    },
+    "sptsb.0-ct-llvm.arch-commit/results/0hrs-11mins-36secs/triage.json": {
+        "result": "true-positive",
+        "reason": "none"
+    }
+}

@@ -1,0 +1,42 @@
+{
+    "protdelay-ct-llvm.ct-cache/results/1hrs-13mins-05secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021e4 @code+484. 0 :   MOV_M_R : st   dx, DS:[rdi + r10] : MemWrite :  D=0x0000000000003000 A=0x403840  FetchSeq=1717480  CPSeq=1652667  flags=(IsInteger|IsStore|IsMicroop|IsLastMicroop|IsFirstMicroop)\n",
+            "system.cpu: A0 T0 : 0x4021e4 @code+484. 0 :   MOV_M_R : st   dx, DS:[rdi + r10] : MemWrite :  D=0x0000000000003000 A=0x403200  FetchSeq=1717480  CPSeq=1652667  flags=(IsInteger|IsStore|IsMicroop|IsLastMicroop|IsFirstMicroop)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-cache/results/1hrs-23mins-30secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x40217a @code+378    : movzx\tebx, DS:[rdi + rax] \n",
+            "system.cpu: A0 T0 : 0x4021f5 @code+501    :   MFENCE                   : IntAlu :   FetchSeq=3060781  CPSeq=2943265  flags=(IsWriteBarrier|IsReadBarrier)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-cache/results/3hrs-07mins-52secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f3 @code+499    :   MFENCE                   : IntAlu :   FetchSeq=2096912  CPSeq=2048893  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x40211c @code+284    : mov\trcx, DS:[rdi + rax]   \n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-cache/results/4hrs-17mins-33secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021fd @code+509    :   MFENCE                   : IntAlu :   FetchSeq=1842833  CPSeq=1802026  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x4021ea @code+490    : mov\trsi                   \n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-cache/results/4hrs-51mins-41secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021fb @code+507    :   MFENCE                   : IntAlu :   FetchSeq=776846  CPSeq=744656  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x4021ba @code+442    : cmp\tDS:[rdi + r9], 0      \n"
+        ]
+    }
+}
