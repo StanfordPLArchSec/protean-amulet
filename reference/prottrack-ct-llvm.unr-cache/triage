@@ -1,0 +1,59 @@
+protean.track-ct-llvm.unr-cache/results/0hrs-57mins-32secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x4021ed    :   MFENCE                   : \n",
+    "system.cpu: 0x40214d    : movzx\tebx, DS:[rdi + rax] \n"
+  ]
+}
+protean.track-ct-llvm.unr-cache/results/1hrs-37mins-09secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x4021bc    : mov\tDS:[rdi + rsi], ecx   \n",
+    "system.cpu: 0x4021fd    :   MFENCE                   : \n"
+  ]
+}
+protean.track-ct-llvm.unr-cache/results/2hrs-04mins-54secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x4021ec    : lea\tr8, DS:[8*r8 + rdi]   \n",
+    "system.cpu: 0x4021fd    :   MFENCE                   : \n"
+  ]
+}
+protean.track-ct-llvm.unr-cache/results/2hrs-05mins-33secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x4021fd    :   MFENCE                   : \n",
+    "system.cpu: 0x4021c1    : and\trsi                   \n"
+  ]
+}
+protean.track-ct-llvm.unr-cache/results/2hrs-24mins-46secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x4021db    : add\tr8                    \n",
+    "system.cpu: 0x4021fb    :   MFENCE                   : \n"
+  ]
+}
+protean.track-ct-llvm.unr-cache/results/1hrs-44mins-53secs/triage.json
+{
+  "result": "true-positive",
+  "reason": "none"
+}
+protean.track-ct-llvm.unr-cache/results/0hrs-17mins-08secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x402134    : mov\tr11, DS:[rax + rdi]   \n",
+    "system.cpu: 0x4021ed    :   MFENCE                   : \n"
+  ]
+}

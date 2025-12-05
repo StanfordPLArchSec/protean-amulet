@@ -1,0 +1,18 @@
+protean.delay-arch-llvm.arch-cache/results/1hrs-07mins-37secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: A0 T0 : 0x4021b4 @code+436. 0 :   MOV_R_M : ld   r9, DS:[rdi + r9] : MemRead :  D=0x00397200003dfec0 A=0x403700  FetchSeq=1141006  CPSeq=1098729  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n",
+    "system.cpu: A0 T0 : 0x4021b4 @code+436. 0 :   MOV_R_M : ld   r9, DS:[rdi + r9] : MemRead :  D=0x000b4bc00039aa00 A=0x403700  FetchSeq=1141006  CPSeq=1098729  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n"
+  ]
+}
+protean.delay-arch-llvm.arch-cache/results/0hrs-21mins-41secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: A0 T0 : 0x402198 @code+408. 0 :   MOVZX_W_R_M : ld   t1w, DS:[rdi + r12] : MemRead :  D=0x0000000000401a40 A=0x403900  FetchSeq=202700  CPSeq=194201  flags=(IsInteger|IsLoad|IsMicroop|IsDelayedCommit|IsFirstMicroop)\n",
+    "system.cpu: A0 T0 : 0x402198 @code+408. 0 :   MOVZX_W_R_M : ld   t1w, DS:[rdi + r12] : MemRead :  D=0x000000000040c100 A=0x403900  FetchSeq=202700  CPSeq=194201  flags=(IsInteger|IsLoad|IsMicroop|IsDelayedCommit|IsFirstMicroop)\n"
+  ]
+}

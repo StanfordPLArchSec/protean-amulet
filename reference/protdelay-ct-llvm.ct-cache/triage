@@ -1,0 +1,41 @@
+protdelay-ct-llvm.ct-cache/results/1hrs-13mins-05secs/triage.json
+{
+  "result": "true-positive",
+  "reason": "none"
+}
+protdelay-ct-llvm.ct-cache/results/1hrs-23mins-30secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x40217a    : movzx\tebx, DS:[rdi + rax] \n",
+    "system.cpu: 0x4021f5    :   MFENCE                   : \n"
+  ]
+}
+protdelay-ct-llvm.ct-cache/results/3hrs-07mins-52secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x4021f3    :   MFENCE                   : \n",
+    "system.cpu: 0x40211c    : mov\trcx, DS:[rdi + rax]   \n"
+  ]
+}
+protdelay-ct-llvm.ct-cache/results/4hrs-17mins-33secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x4021fd    :   MFENCE                   : \n",
+    "system.cpu: 0x4021ea    : mov\trsi                   \n"
+  ]
+}
+protdelay-ct-llvm.ct-cache/results/4hrs-51mins-41secs/triage.json
+{
+  "result": "false-positive",
+  "reason": "mismatching-dbgouts",
+  "culprit-lines": [
+    "system.cpu: 0x4021fb    :   MFENCE                   : \n",
+    "system.cpu: 0x4021ba    : cmp\tDS:[rdi + r9], 0      \n"
+  ]
+}
