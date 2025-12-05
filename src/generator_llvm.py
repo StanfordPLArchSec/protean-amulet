@@ -45,7 +45,7 @@ class X86LLVMGenerator(Generator):
         ll_out_file = stem_file + ".out.ll"
         obj_file = stem_file + ".o"
         bin_file = stem_file + ".bin"
-        llvm_plugin = "../passes/build/libSandboxPass.so"
+        llvm_plugin = "build/libSandboxPass.so"
 
         # Generate the input.
         subprocess.run([
