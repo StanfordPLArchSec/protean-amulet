@@ -50,3 +50,11 @@ debug-*/
 /base.json
 /*-commit/
 /*-cache/
+
+# Archival stuff.
+!/reference
+/reference/**/results.tar.xz
+/reference/**/logs.tar.xz
+
+checkpoint-*
+m5out-*
