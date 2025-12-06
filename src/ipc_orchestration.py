@@ -139,8 +139,10 @@ class Gem5IPCOrchestration:
         selector = selectors.DefaultSelector()
         for socket in self.sockets.values():
             selector.register(socket, selectors.EVENT_READ)
-        socket = selector.select()[0][0].fileobj
-
+        retval = selector.select(timeout=60.0)
+        if not retval:
+            raise TimeoutError(f"timed out when reading from selector {selector}")
+        socket = retval[0][0].fileobj
         self.conn, _ = socket.accept()
         self.conn_selector = selectors.DefaultSelector()
         self.conn_selector.register(self.conn, selectors.EVENT_READ)
@@ -148,7 +150,7 @@ class Gem5IPCOrchestration:
         (op, pid) = struct.unpack('QQ', self.recv(16))
         if op != OP_ACK_INIT:
             raise ValueError(f'expected OP_ACK_INIT from gem5, got {op:016x}')
-        assert pid in self.processes
+        assert pid in self.processes, f"pid {pid} not in processes {self.processes}"
         if CONF.verbose:
             print('connected to gem5 process', pid)
         self.active_process = pid

@@ -629,4 +629,5 @@ def main():
 
 
 if __name__ == '__main__':
+    os.makedirs("/tmp/amulet", exist_ok=True)
     main()

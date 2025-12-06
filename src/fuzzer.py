@@ -73,7 +73,7 @@ class Fuzzer:
 
             if CONF.profile: generate_start = time.time()
             # Generate a test case
-            test_case_name = f"generated-{CONF.process_run}.asm"
+            test_case_name = f"/tmp/amulet/generated-{CONF.process_run}.asm"
             if not self.existing_test_case:
                 test_case = self.generator.create_test_case(test_case_name, i)
             else:
