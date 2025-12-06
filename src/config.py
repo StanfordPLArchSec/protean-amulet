@@ -332,7 +332,8 @@ class ConfCls:
                                   f"It's likely a typo in the configuration file.")
 
         # value checks
-        if options.get(name, '') != '' and value not in options[name]:
+        # NOTE: Disable this check due to extensions.
+        if False and options.get(name, '') != '' and value not in options[name]:
             raise ConfigException(f"Unknown value '{value}' of configuration variable '{name}'")
         if (self.input_main_region_size % 4096 != 0) or \
                 (self.input_assist_region_size % 4096 != 0):
