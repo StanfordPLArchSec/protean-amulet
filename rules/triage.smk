@@ -2,6 +2,7 @@ import os
 import re
 import json
 import glob
+import hashlib
 
 def result_path(suffix):
     return os.path.join("{defense}-{observer}-{generator}-{attacker}",
@@ -60,7 +61,6 @@ def compare_dbgout_lines(l1, l2, observer):
 
     return True
 
-        
 
 timeout = 300
     
@@ -76,16 +76,20 @@ rule result_inorder_single:
     params:
         gem5_debug_flags = triage_flags,
         timeout = timeout,
+        asm_copy = lambda w: expand(
+            result_path("test_case_rvzr_input1.inorder.{input}.asm"),
+            **w),        
     shell:
         "rm -rf {output} && "
         "mkdir -p {output} && "
+        "cp {input.asm} {params.asm_copy} && "
         "GEM5_DEBUG_FLAGS={params.gem5_debug_flags} "
         "GEM5_DEBUG_FILE=$(realpath {output}/dbgout.txt) "
         "timeout {params.timeout} ./src/cli.py fuzz --generator={wildcards.generator} "
         " --cpu-type=X86TimingSimpleCPU -s base.json --ruby "
         "--protean=None --ipc-show-output --gem5-path=gem5/protean --gem5-binary=gem5/protean/build/X86/gem5.opt "
-        "-i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} -t {input.asm} --result-dir={output}/results "
-        "-p protean-check-inorder-{wildcards.input} "
+        "-i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} -t {params.asm_copy} --result-dir={output}/results "
+        "-p protean-check-inorder-{wildcards.defense}-{wildcards.observer}-{wildcards.generator}-{wildcards.attacker}-{wildcards.result}-{wildcards.input} "
         ">{output}/stdout.txt 2>{output}/stderr.txt "
 
 def do_triage_str(input, wildcards):
@@ -186,9 +190,13 @@ rule result_ooo_single:
         script_opts = lambda w: get_defense(w).script_opts,
         triage_flags = triage_flags,
         timeout = timeout,
+        asm_copy = lambda w: expand(
+            result_path("test_case_rvzr_input1.ooo.{input}.asm"),
+            **w),
     shell:
         "rm -rf {output} && "
         "mkdir -p {output} && "
+        "cp {input.asm} {params.asm_copy} && "
         "GEM5_DEBUG_FLAGS={params.triage_flags} "
         "GEM5_DEBUG_FILE=$(realpath {output}/dbgout.txt) "
         "timeout {params.timeout} ./src/cli.py fuzz --generator={wildcards.generator} "
@@ -197,8 +205,8 @@ rule result_ooo_single:
         "    --ipc-show-output --gem5-path={params.gem5_dir} "
         "    --gem5-binary={params.gem5_dir}/build/X86/gem5.opt "
         "    -i 1 -n 1 -c {input.config} --verbose -ic {input.pickle} "
-        "    -t {input.asm} --result-dir={output}/results "
-        "    -p protean-check-ooo-{wildcards.input} "
+        "    -t {params.asm_copy} --result-dir={output}/results "
+        "    -p protean-check-ooo-{wildcards.defense}-{wildcards.observer}-{wildcards.generator}-{wildcards.attacker}-{wildcards.result}-{wildcards.input} "
         "    >{output}/stdout.txt 2>{output}/stderr.txt "
         
 rule result_ooo_triage:

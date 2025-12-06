@@ -9,6 +9,7 @@ import time
 import re
 from typing import List
 import array
+import hashlib
 
 OP_INIT = 0xd09e95bc2c73ad66
 OP_ACK_INIT = 0xc4f991d25774a0ac
@@ -101,9 +102,13 @@ class Gem5IPCOrchestration:
             stderr = subprocess.STDOUT
         # We can't just generate a random name since currently calling random
         # messes up the input boosting (this is a bug which will hopefully be fixed eventually)
-        socket_name = f'revizor-gem5-{CONF.process_run}-{self.socket_number}-{time.time():.9f}'
+        socket_name_raw = f'revizor-gem5-{CONF.process_run}-{self.socket_number}-{time.time():.9f}'
         self.socket_number += 1
         sock = socket.socket(socket.AF_UNIX)
+
+        socket_name_hash = hashlib.sha1(socket_name_raw.encode()).hexdigest()[:16]
+        socket_name = f"amulet-{socket_name_hash}"
+        
         sock.bind(b'\0' + socket_name.encode())
         sock.listen(CONF.gem5_ipc_parallelism + 1)
         cmd = cmd.copy()

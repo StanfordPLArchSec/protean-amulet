@@ -1,0 +1,90 @@
+{
+    "protdelay-ct-llvm.ct-commit/results/0hrs-09mins-12secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x402164 @code+356. 8 :   DIV_R : divq   eax, eax  : IntAlu :  D=0x000000000000034c  FetchSeq=24439  CPSeq=21975  flags=(IsInteger|IsMicroop|IsDelayedCommit|IsProtISAProtected)\n",
+            "system.cpu: A0 T0 : 0x402164 @code+356. 3 :   DIV_R : div2   t1d, eax, t1d : IntDiv :  D=0x0000000000016900  FetchSeq=24721  CPSeq=21975  flags=(IsInteger|IsMicroop|IsDelayedCommit|IsProtISAProtected)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/0hrs-08mins-56secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x402198 @code+408.18 :   IDIV_R : divq   t5d, t5d : IntAlu :  D=0x000000000000045d  FetchSeq=80618  CPSeq=76115  flags=(IsInteger|IsMicroop|IsDelayedCommit|IsProtISAProtected)\n",
+            "system.cpu: A0 T0 : 0x402198 @code+408.13 :   IDIV_R : div2   t4d, t1d, t4d : IntDiv :  D=0x0000000000057b80  FetchSeq=80797  CPSeq=76115  flags=(IsInteger|IsMicroop|IsDelayedCommit|IsProtISAProtected)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/0hrs-04mins-52secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4020e4 @code+228    : mov\trax, DS:[r10 + rdi]   \n",
+            "system.cpu: A0 T0 : 0x4021f3 @code+499    :   MFENCE                   : IntAlu :   FetchSeq=13179  CPSeq=11065  flags=(IsWriteBarrier|IsReadBarrier)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/0hrs-39mins-20secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x402159 @code+345.18 :   IDIV_R : divq   t5d, t5d : IntAlu :  D=0x000000000000026c  FetchSeq=80296  CPSeq=75734  flags=(IsInteger|IsMicroop|IsDelayedCommit|IsProtISAProtected)\n",
+            "system.cpu: A0 T0 : 0x402159 @code+345.13 :   IDIV_R : div2   t4d, t1d, t4d : IntDiv :  D=0x0000000000046000  FetchSeq=80581  CPSeq=75734  flags=(IsInteger|IsMicroop|IsDelayedCommit|IsProtISAProtected)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/0hrs-43mins-21secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f6 @code+502    : and\trdi                   \n",
+            "system.cpu: A0 T0 : 0x4021fd @code+509    :   MFENCE                   : IntAlu :   FetchSeq=13462  CPSeq=11377  flags=(IsWriteBarrier|IsReadBarrier)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/1hrs-12mins-04secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f3 @code+499    :   MFENCE                   : IntAlu :   FetchSeq=57618  CPSeq=53629  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x402159 @code+345    : mov\tr12                   \n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/2hrs-28mins-16secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f9 @code+505    : mov\tDS:[rax + rdi], rdi   \n",
+            "system.cpu: A0 T0 : 0x4021fd @code+509    :   MFENCE                   : IntAlu :   FetchSeq=13465  CPSeq=11381  flags=(IsWriteBarrier|IsReadBarrier)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/0hrs-42mins-30secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x402187 @code+391    : movzx\tebx, DS:[r10 + rdi] \n",
+            "system.cpu: A0 T0 : 0x4021fa @code+506    :   MFENCE                   : IntAlu :   FetchSeq=24597  CPSeq=21967  flags=(IsWriteBarrier|IsReadBarrier)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/0hrs-43mins-54secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021d2 @code+466. 8 :   DIV_R : divq   rax, rax  : IntAlu :  D=0x000000004708b975  FetchSeq=24945  CPSeq=22009  flags=(IsInteger|IsMicroop|IsDelayedCommit|IsProtISAProtected)\n",
+            "system.cpu: A0 T0 : 0x4021d2 @code+466. 3 :   DIV_R : div2   t1, rax, t1 : IntDiv :  D=0x000000000011a200  FetchSeq=25036  CPSeq=22009  flags=(IsInteger|IsMicroop|IsDelayedCommit|IsProtISAProtected)\n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/1hrs-28mins-59secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021f5 @code+501    :   MFENCE                   : IntAlu :   FetchSeq=35208  CPSeq=32551  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x40213c @code+316    : mov\tedi                   \n"
+        ]
+    },
+    "protdelay-ct-llvm.ct-commit/results/1hrs-56mins-50secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021fd @code+509    :   MFENCE                   : IntAlu :   FetchSeq=47307  CPSeq=43936  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x4021ee @code+494    : mov\tDS:[r8 + rdi], rdi    \n"
+        ]
+    }
+}

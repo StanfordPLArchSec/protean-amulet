@@ -46,34 +46,26 @@ do_archive() {
 
     # validation steps before copying.
     if (( ! no_validate )); then
-        if ! "$root/validate.py" "$1"/log-*.txt; then
+        if ! "$root/validate.py" -n100 "$1"/log-*.txt; then
             echo "ERROR: $1: validation failed!" >&2
             return 1
         fi
-        num_logs=$(ls "$1"/log-*.txt | wc -l)
-        if (( num_logs != 100 )); then
-            echo "ERROR: missing logs!" >&2
+
+        if [[ ! -f "$1"/triage ]]; then
+            echo "ERROR: $1/triage: doesn't exist" >&2
+            return 1
+        fi
+        
+        if ! python3 -m json < "$1"/triage > /dev/null; then
+            echo "ERROR: $1/triage: not valid json" >&2
             return 1
         fi
     fi
+
+
     d="$ref/$base"
-    if [[ -d "$d" ]]; then
-        echo "WARNING: directory already exists, skipping: $d" >&2
-        return 1
-    fi
-
-    # do the copy
-    cp -r "$1" "$ref/$base"
-
-    # do the compression
-    pushd "$d" >/dev/null
-    tar --xz -cf logs.tar.xz log-*.txt
-    rm log-*.txt
-    if [[ -d results ]]; then
-        tar --xz -cf results.tar.xz results
-        rm -r results
-    fi
-    popd >/dev/null
+    mkdir -p "$d"
+    cp "$1"/triage "$d"/triage
 }
 
 mkdir -p "$root/reference"
