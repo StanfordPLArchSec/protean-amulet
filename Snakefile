@@ -1,6 +1,5 @@
-num_instances = 100
-# Changed from 140 to 5, since the 'commit' microarchitectural observer
-# finds many more violations.
+num_instances = int(config.get("instances", "100"))
+
 num_programs = int(config.get("programs", "200"))
 
 verbose = bool(int(config.get("verbose", "0")))
@@ -96,8 +95,8 @@ def get_attacker(w) -> str:
 
 def get_inputs(w) -> int:
     d = {
-        "cache": 140,
-        "commit": 5,
+        "cache": int(config.get("inputs_cache", "140")),
+        "commit": int(config.get("inputs_commit", "5")),
     }
     return d[w.attacker]
 
