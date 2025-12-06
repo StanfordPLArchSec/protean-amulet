@@ -1309,6 +1309,7 @@ def get_generator(instruction_set: InstructionSet) -> Generator:
             return X86LLVMGenerator(instruction_set, protcc='rand')
         elif m := re.match(r"const:(.*)", CONF.generator):
             return X86ConstGenerator(instruction_set, m.group(1))
+        else:
+            raise ValueError(f"invalid generator {CONF.generator}")
 
-    ConfigException("unknown value of `instruction_set` configuration option")
-    exit(1)
+    raise ConfigException(f"unknown value of `instruction_set` configuration option")

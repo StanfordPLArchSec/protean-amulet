@@ -1430,8 +1430,7 @@ def get_model(bases: Tuple[int, int]) -> Model:
         elif "seq" in CONF.contract_execution_clause:
             model = X86UnicornSeq(bases[0], bases[1])
         else:
-            ConfigException("unknown value of `contract_execution_clause` configuration option")
-            exit(1)
+            raise ConfigException("unknown value of `contract_execution_clause` configuration option")
 
         # observational part of the contract
         if CONF.contract_observation_clause == "l1d":
@@ -1455,10 +1454,8 @@ def get_model(bases: Tuple[int, int]) -> Model:
         elif CONF.contract_observation_clause == 'cts':
             model.tracer = CTSTracer()
         else:
-            ConfigException("unknown value of `contract_observation_clause` configuration option")
-            exit(1)
+            raise ConfigException("unknown value of `contract_observation_clause` configuration option")
 
         return model
     else:
-        ConfigException("unknown value of `model` configuration option")
-        exit(1)
+        raise ConfigException("unknown value of `model` configuration option")

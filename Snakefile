@@ -9,6 +9,8 @@ retries = int(config.get("retries", "2"))
 
 re_dotted_word = r"(\w|\.)+"
 
+container: "amulet.sif"
+
 wildcard_constraints:
     defense = re_dotted_word,
     observer = re_dotted_word,
@@ -123,8 +125,13 @@ rule run_amulet_instance:
             expand("{defense}-{observer}-{generator}-{attacker}", **w),
         verbose_args = ["--ipc-show-output", "--verbose"] if verbose else [],
         num_inputs = get_inputs,
+        timeout = 3600 * 4, # timeout for fuzzing job
     retries: retries
+    resources:
+        runtime = 24 * 60 # 24 hours.
     shell:
+        "ulimit -c unlimited && ulimit -c -S unlimited && "
+        "PYTHONUNBUFFERED=1 stdbuf -o0 -e0 "
         "./src/cli.py fuzz --gen-seed=$RANDOM$RANDOM -s base.json "
         "--generator={wildcards.generator} --ruby "
         "--gem5-script-opts='{params.script_opts}' "
@@ -133,6 +140,7 @@ rule run_amulet_instance:
         "--result-dir={params.result_dir}/ "
         "-p {params.result_dir}-{wildcards.idx} "
         "--gem5-path={params.gem5_dir} --gem5-binary={params.gem5_dir}/build/X86/gem5.opt "
+        "--timeout={params.timeout} "
         "{params.verbose_args} "
         "> {output} 2>&1 && "
         "! grep '^Buggy test' {output}"
