@@ -87,7 +87,7 @@ class Fuzzer:
             if CONF.profile: STAT.generate_time += time.time() - generate_start
 
             # Fuzz the test case
-            violation = self.fuzzing_round(test_case, inputs, i)
+            violation = self.fuzzing_round(test_case, inputs, i, timeout)
             STAT.test_cases += 1
 
             if violation:
@@ -144,7 +144,7 @@ class Fuzzer:
                 bit += 1
             print(bits)
     
-    def fuzzing_round(self, test_case: TestCase, inputs: List[Input], round) -> Optional[EquivalenceClass]:
+    def fuzzing_round(self, test_case: TestCase, inputs: List[Input], round, timeout: int) -> Optional[EquivalenceClass]:
         self.model.load_test_case(test_case)
         self.executor.load_test_case(test_case)
         self.coverage.load_test_case(test_case)
@@ -239,7 +239,8 @@ class Fuzzer:
             LOGGER.fuzzer_priming(len(violations))
             violation: EquivalenceClass = violations.pop()
             if CONF.profile: prime_start = time.time()
-            survives_priming = self.survives_priming(violation, boosted_inputs)
+            survives_priming = self.survives_priming(
+                violation, boosted_inputs, timeout)
             if CONF.profile: STAT.prime_time += time.time() - prime_start
             
             if survives_priming:
@@ -247,6 +248,7 @@ class Fuzzer:
                 test_input, ref_input = survives_priming
                 self.copy_debug_files(test_input=test_input, base_input=ref_input, ref_input=ref_input, round=round, test_case=test_case, head_input=True)
                 return violation
+            
         # all violations were cleaned. all good
 
         return None
@@ -290,7 +292,7 @@ class Fuzzer:
         return
 
 
-    def survives_priming(self, org_violation: EquivalenceClass, all_inputs: List[Input]) -> Optional[Tuple[Input, Input]]:
+    def survives_priming(self, org_violation: EquivalenceClass, all_inputs: List[Input], timeout: int) -> Optional[Tuple[Input, Input]]:
         """
         Try priming the inputs that caused the violations
 
@@ -308,6 +310,13 @@ class Fuzzer:
 
             # insert the tested inputs into their places
             for input_id in input_ids_to_test:
+                # stop fuzzing after a timeout
+                if timeout:
+                    now = datetime.today()
+                    if (now - self.start_time).total_seconds() > timeout:
+                        LOGGER.fuzzer_timeout()
+                        return None
+                
                 primer = all_inputs[:current_input_id + 1]
                 primer[current_input_id] = all_inputs[input_id]
 
