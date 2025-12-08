@@ -14,7 +14,7 @@ import os
 import shutil
 
 max_code_size = 512
-llvm_dir = "../llvm/ptex-17/build/bin"
+llvm_dir = "../llvm/build/bin"
 optimize = True
 
 class X86LLVMGenerator(Generator):
