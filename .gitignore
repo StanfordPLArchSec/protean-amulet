@@ -58,3 +58,5 @@ debug-*/
 
 checkpoint-*
 m5out-*
+/harness
+/.snakemake/
