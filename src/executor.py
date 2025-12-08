@@ -680,6 +680,7 @@ class X86Gem5(Executor):
                 f.write(tags)
         except Gem5Crash:
             LOGGER.waring('executor', 'Gem5 crashed!!')
+            exit(1)
             # restart gem5 in case of crash
             self.ipc.restart_gem5(self.get_cmd("", self.priming))
             raise

@@ -325,10 +325,10 @@ class ConfCls:
         if name[0] == "_":
             raise ConfigException(f"Attempting to set an internal configuration variable {name}.")
         if getattr(self, name, None) is None:
-            raise ConfigException(f"Unknown configuration variable {name}.\n"
-                                  f"It's likely a typo in the configuration file.")
+            ConfigException(f"Unknown configuration variable {name}.\n"
+                            f"It's likely a typo in the configuration file.")
         if type(self.__getattribute__(name)) != type(value):
-            raise ConfigException(f"Wrong type of the configuration variable {name}.\n"
+            ConfigException(f"Wrong type of the configuration variable {name}.\n"
                                   f"It's likely a typo in the configuration file.")
 
         # value checks
