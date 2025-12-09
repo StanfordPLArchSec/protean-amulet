@@ -20,5 +20,5 @@ def get_seconds(path):
         exit(1)
     return l[-1]
 
-x = sum(map(get_seconds, args.log))
-print(x)
+l = [get_seconds(log) for log in args.log]
+print(sum(l), max(l))
