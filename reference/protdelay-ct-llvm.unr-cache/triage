@@ -1,1 +1,90 @@
-{}
+{
+    "protdelay-ct-llvm.unr-cache/results/0hrs-12mins-07secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x402170    : mov\tDS:[r11 + rdi], dx    \n",
+            "system.cpu: 0x4021ef    :   MFENCE                   : \n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/0hrs-30mins-06secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4021fd    :   MFENCE                   : \n",
+            "system.cpu: 0x4021d6    : cmp\tDS:[rdi + rax], r9b   \n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/1hrs-46mins-47secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4020f0.13 :   IDIV_R : div2   t4, t1, t4 : \n",
+            "system.cpu: 0x4020f0.18 :   IDIV_R : divq   t5, t5   : \n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/1hrs-10mins-41secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4021fb    :   MFENCE                   : \n",
+            "system.cpu: 0x40216c    : and\trsi                   \n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/0hrs-22mins-10secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4021ed    :   MFENCE                   : \n",
+            "system.cpu: 0x4020f8    : mov\tr8                    \n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/1hrs-23mins-11secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4021fd    :   MFENCE                   : \n",
+            "system.cpu: 0x4021e8    : mov\trcx, DS:[rcx + rdi]   \n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/1hrs-02mins-48secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4021d5    : and\trsi                   \n",
+            "system.cpu: 0x4021fd    :   MFENCE                   : \n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/0hrs-31mins-44secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021ba @code+442. 0 :   MOV_M_R : st   r8, DS:[rbx + rdi] : MemWrite :  D=0x0000000000000000 A=0x403f80  FetchSeq=795577  CPSeq=788902  flags=(IsInteger|IsStore|IsMicroop|IsLastMicroop|IsFirstMicroop)\n",
+            "system.cpu: A0 T0 : 0x4021ba @code+442. 0 :   MOV_M_R : st   r8, DS:[rbx + rdi] : MemWrite :  D=0x0000000000000000 A=0x403280  FetchSeq=795577  CPSeq=788902  flags=(IsInteger|IsStore|IsMicroop|IsLastMicroop|IsFirstMicroop)\n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/0hrs-43mins-47secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: A0 T0 : 0x4021b4 @code+436. 1 :   CMP_M_I : ld   t1b, DS:[rdi + rax] : MemRead :  D=0x00000000004021c0 A=0x403d00  FetchSeq=24390  CPSeq=22132  flags=(IsInteger|IsLoad|IsMicroop|IsDelayedCommit|IsPTeXProtected)\n",
+            "system.cpu: A0 T0 : 0x4021b4 @code+436. 1 :   CMP_M_I : ld   t1b, DS:[rdi + rax] : MemRead :  D=0x0000000000402100 A=0x403700  FetchSeq=24390  CPSeq=22132  flags=(IsInteger|IsLoad|IsMicroop|IsDelayedCommit|IsPTeXProtected)\n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/1hrs-30mins-14secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4021ed    :   MFENCE                   : \n",
+            "system.cpu: 0x40216d    : mov\tr11                   \n"
+        ]
+    },
+    "protdelay-ct-llvm.unr-cache/results/0hrs-00mins-39secs/triage.json": {
+        "result": "false-positive",
+        "reason": "mismatching-dbgouts",
+        "culprit-lines": [
+            "system.cpu: 0x4021fd    :   MFENCE                   : \n",
+            "system.cpu: 0x4021b9    : movsxd\trcx                \n"
+        ]
+    }
+}
