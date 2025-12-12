@@ -3,24 +3,24 @@
         "result": "false-positive",
         "reason": "mismatching-dbgouts",
         "culprit-lines": [
-            "system.cpu: A0 T0 : 0x4021df @code+479. 0 :   MOV_R_M : ld   rdx, DS:[rdi + rdx] : MemRead :  D=0x00222080001dff00 A=0x403ff8  FetchSeq=1117637  CPSeq=1106218  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n",
-            "system.cpu: A0 T0 : 0x4021df @code+479. 0 :   MOV_R_M : ld   rdx, DS:[rdi + rdx] : MemRead :  D=0x000aefc0001f8440 A=0x403ff8  FetchSeq=1117637  CPSeq=1106218  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n"
+            "system.cpu: A0 T0 : 0x4021ea @code+490. 0 :   MOV_R_M : ld   rcx, DS:[rdi + rdx] : MemRead :  D=0x00380dc0001ff740 A=0x403f00  FetchSeq=1117640  CPSeq=1106221  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n",
+            "system.cpu: A0 T0 : 0x4021ea @code+490. 0 :   MOV_R_M : ld   rcx, DS:[rdi + rdx] : MemRead :  D=0x001a29c000254700 A=0x403440  FetchSeq=1117640  CPSeq=1106221  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n"
         ]
     },
     "prottrack-arch-llvm.arch-cache/results/0hrs-20mins-15secs/triage.json": {
         "result": "false-positive",
         "reason": "mismatching-dbgouts",
         "culprit-lines": [
-            "system.cpu: A0 T0 : 0x402175 @code+373. 1 :   CMP_M_I : ld   t1b, DS:[rdi + r12] : MemRead :  D=0x0000000000402140 A=0x403028  FetchSeq=587389  CPSeq=579796  flags=(IsInteger|IsLoad|IsMicroop|IsDelayedCommit)\n",
-            "system.cpu: A0 T0 : 0x402175 @code+373. 1 :   CMP_M_I : ld   t1b, DS:[rdi + r12] : MemRead :  D=0x0000000000402100 A=0x403028  FetchSeq=587389  CPSeq=579796  flags=(IsInteger|IsLoad|IsMicroop|IsDelayedCommit)\n"
+            "system.cpu: A0 T0 : 0x4021f3 @code+499    :   MFENCE                   : IntAlu :   FetchSeq=587394  CPSeq=579801  flags=(IsWriteBarrier|IsReadBarrier)\n",
+            "system.cpu: A0 T0 : 0x40217c @code+380    : add\trsi                   \n"
         ]
     },
     "prottrack-arch-llvm.arch-cache/results/0hrs-34mins-02secs/triage.json": {
         "result": "false-positive",
         "reason": "mismatching-dbgouts",
         "culprit-lines": [
-            "system.cpu: A0 T0 : 0x4021b4 @code+436. 0 :   MOV_R_M : ld   r9, DS:[rdi + r9] : MemRead :  D=0x000a49000014c7c0 A=0x403000  FetchSeq=984588  CPSeq=963796  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n",
-            "system.cpu: A0 T0 : 0x4021b4 @code+436. 0 :   MOV_R_M : ld   r9, DS:[rdi + r9] : MemRead :  D=0x002c4e40003c4580 A=0x403000  FetchSeq=984588  CPSeq=963796  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n"
+            "system.cpu: A0 T0 : 0x4021c2 @code+450. 0 :   MOV_R_M : ld   r10, DS:[rdi + r10] : MemRead :  D=0x000ba6400026ce00 A=0x4037c0  FetchSeq=984592  CPSeq=963800  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n",
+            "system.cpu: A0 T0 : 0x4021c2 @code+450. 0 :   MOV_R_M : ld   r10, DS:[rdi + r10] : MemRead :  D=0x000ee4c0003c6fc0 A=0x403580  FetchSeq=984592  CPSeq=963800  flags=(IsInteger|IsLoad|IsMicroop|IsLastMicroop|IsFirstMicroop)\n"
         ]
     }
 }
