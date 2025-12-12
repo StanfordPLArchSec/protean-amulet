@@ -39,10 +39,6 @@ def triage_flags(w):
     return triage_flags_impl(w) + ",FmtTicksOff"
 
 def compare_dbgout_lines(l1, l2, observer):
-    if observer == "arch":
-        return l1 == l2
-    # Otherwise, assume CT and just look at address and PC.
-
     def check_pattern(pattern):
         m1 = re.search(pattern, l1)
         m2 = re.search(pattern, l2)
